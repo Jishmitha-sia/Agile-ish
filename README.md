@@ -38,24 +38,30 @@ agile-ish/
 
 ## Quick start
 
-```sh
-# 1. Install deps
+```powershell
+# 1. Configure env (one-time)
+Copy-Item .env.example .env
+# Generate JWT keypair — see docs/PHASE_1_VERIFY.md for the exact commands
+
+# 2. Install + start infrastructure
 pnpm install
+pnpm docker:up                  # Postgres + Redis + MailHog
+pnpm db:migrate                 # apply schema + RLS policies
+pnpm db:seed                    # optional: demo@agile-ish.local / AgileIshDemo!2026
 
-# 2. Bring up infra (Postgres, Redis, MailHog)
-cp .env.example .env
-pnpm docker:up
-
-# 3. Generate JWT keypair (one-time; see .env.example for command)
-
-# 4. Run migrations
-pnpm db:migrate
-
-# 5. Start dev
+# 3. Run both apps with hot reload
 pnpm dev
 ```
 
-API: <http://localhost:4000> · Web: <http://localhost:3000> · MailHog: <http://localhost:8025>
+| Surface | URL |
+| --- | --- |
+| Web | <http://localhost:3000> |
+| API | <http://localhost:4000> |
+| OpenAPI docs | <http://localhost:4000/docs> |
+| MailHog (captured emails) | <http://localhost:8025> |
+| Adminer (DB GUI, optional) | <http://localhost:8080> — start with `--profile tools` |
+
+**Full Phase 1 verification recipe:** see [docs/PHASE_1_VERIFY.md](docs/PHASE_1_VERIFY.md) for the end-to-end smoke test (signup, RLS check, audit log query, refresh-token rotation).
 
 ## Phase plan
 

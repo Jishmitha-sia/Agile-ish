@@ -1,0 +1,152 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-flight runs on the same branch / PR — the latest commit wins.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PNPM_VERSION: 9.12.0
+  NODE_VERSION: 20.11.0
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ───── Lint + typecheck + build (no DB needed) ─────────────────────────────
+  build:
+    name: lint · typecheck · build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @agile-ish/api db:generate
+        env:
+          # Prisma generate doesn't connect — any non-empty URL satisfies the parser.
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          DIRECT_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+      - name: Build contracts package
+        run: pnpm --filter @agile-ish/contracts build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build all apps
+        run: pnpm build
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:4000
+          NEXT_PUBLIC_APP_URL: http://localhost:3000
+          NEXT_PUBLIC_REFRESH_COOKIE_NAME: agile_rt
+
+  # ───── Tests with real Postgres + Redis (matrix runs unit + e2e in parallel) ─
+  test:
+    name: test (${{ matrix.kind }})
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        kind: [unit, e2e]
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: agile
+          POSTGRES_PASSWORD: agile_ci_password
+          POSTGRES_DB: agile_ish
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U agile -d agile_ish"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://agile:agile_ci_password@localhost:5432/agile_ish?schema=public
+      DIRECT_URL: postgresql://agile:agile_ci_password@localhost:5432/agile_ish?schema=public
+      REDIS_URL: redis://localhost:6379
+      REDIS_NAMESPACE: agile-ish-ci
+      APP_URL: http://localhost:3000
+      API_URL: http://localhost:4000
+      CORS_ORIGINS: http://localhost:3000
+      COOKIE_DOMAIN: localhost
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: lax
+      REFRESH_COOKIE_NAME: agile_rt
+      JWT_ISSUER: agile-ish-ci
+      JWT_AUDIENCE: agile-ish-web
+      SMTP_HOST: localhost
+      SMTP_PORT: "1025"
+      MAIL_FROM: "ci@agile-ish.local"
+      LOG_LEVEL: warn
+      LOG_PRETTY: "false"
+      NODE_ENV: test
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: '${{ env.PNPM_VERSION }}' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '${{ env.NODE_VERSION }}', cache: pnpm }
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate keypair for CI
+        run: |
+          openssl genpkey -algorithm RSA -out priv.pem -pkeyopt rsa_keygen_bits:2048
+          openssl rsa -in priv.pem -pubout -out pub.pem
+          echo "JWT_PRIVATE_KEY_BASE64=$(base64 -w 0 priv.pem)" >> $GITHUB_ENV
+          echo "JWT_PUBLIC_KEY_BASE64=$(base64 -w 0 pub.pem)" >> $GITHUB_ENV
+          rm priv.pem pub.pem
+
+      - name: Build contracts
+        run: pnpm --filter @agile-ish/contracts build
+
+      - name: Generate Prisma client
+        run: pnpm --filter @agile-ish/api db:generate
+
+      - name: Apply migrations
+        if: matrix.kind == 'e2e'
+        run: pnpm --filter @agile-ish/api db:migrate:deploy
+
+      - name: Run ${{ matrix.kind }} tests
+        run: |
+          if [ "${{ matrix.kind }}" = "unit" ]; then
+            pnpm --filter @agile-ish/api test
+          else
+            pnpm --filter @agile-ish/api test:e2e
+          fi

@@ -1,0 +1,39 @@
+# Keep the build context lean — speeds up `docker build` and avoids leaking
+# anything sensitive into image layers.
+
+**/node_modules/
+**/.pnpm-store/
+**/dist/
+**/build/
+**/.next/
+**/out/
+**/.turbo/
+
+**/.env
+**/.env.*
+!**/.env.example
+
+**/coverage/
+**/playwright-report/
+**/test-results/
+
+.git/
+.github/
+.vscode/
+.idea/
+
+**/*.log
+**/npm-debug.log*
+**/pnpm-debug.log*
+**/yarn-error.log*
+
+**/.DS_Store
+**/Thumbs.db
+
+# Docker context shouldn't include other Dockerfiles' contexts.
+infra/docker/data/
+**/data/
+
+# Keys & secrets — never ship into images.
+*.pem
+*.key
