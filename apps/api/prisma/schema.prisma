@@ -1,0 +1,216 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Agile-ish — Prisma schema (Phase 1)
+//
+// Conventions:
+//   • All IDs are CUIDs (collision-resistant, URL-safe, sortable by creation).
+//   • Soft-delete via `deletedAt` on tenant-scoped models. A Prisma client
+//     extension (see PrismaService) intercepts `delete` and rewrites it to a
+//     `deletedAt = now()` update, and filters reads to exclude deleted rows
+//     unless an explicit `includeDeleted` flag is passed.
+//   • Every tenant-scoped model carries `workspaceId`. A second Prisma
+//     extension auto-injects the current request's `workspaceId` into queries
+//     for these models. Postgres RLS policies (applied via SQL migration)
+//     enforce the same rule at the DB layer — defense in depth.
+//   • Audit log is append-only and never soft-deleted.
+// ─────────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["postgresqlExtensions", "fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgcrypto, citext, pg_trgm, vector]
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+  GUEST
+}
+
+enum RefreshTokenRevocationReason {
+  LOGOUT
+  ROTATED
+  REUSED // family-wide kill on token reuse — security event
+  PASSWORD_CHANGED
+  ADMIN_REVOKED
+  EXPIRED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique @db.Citext
+  passwordHash    String? // nullable: OIDC-only users have no local password
+  displayName     String    @db.VarChar(80)
+  avatarUrl       String?   @db.VarChar(2048)
+  emailVerifiedAt DateTime?
+  timezone        String?   @db.VarChar(64)
+  locale          String?   @db.VarChar(16)
+  lastLoginAt     DateTime?
+
+  // Pointer to the user's preferred workspace — set after first signup,
+  // updated when they switch. Denormalized for fast "redirect to workspace"
+  // after login. Canonical truth is still WorkspaceMember rows.
+  defaultWorkspaceId String?
+  defaultWorkspace   Workspace? @relation("UserDefaultWorkspace", fields: [defaultWorkspaceId], references: [id], onDelete: SetNull)
+
+  // Reverse relations
+  memberships     WorkspaceMember[]
+  refreshTokens   RefreshToken[]
+  ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
+  auditLogs       AuditLog[]        @relation("AuditActor")
+  invitesSent     WorkspaceMember[] @relation("InvitedBy")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([defaultWorkspaceId])
+  @@index([deletedAt])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RefreshToken — rotation with family-wide kill on reuse detection.
+//
+// A "family" is the chain of refresh tokens descending from a single login.
+// Each rotation creates a new RefreshToken row with `parentId` pointing to
+// the previous; the previous gets `replacedById` + `revokedAt`. If a *revoked*
+// token is ever presented (replay attack), we revoke the ENTIRE family —
+// every descendant gets `revokedReason = REUSED`. The user is forced to
+// re-authenticate. This is the OWASP-recommended rotation pattern.
+//
+// We store SHA-256(tokenValue) — the raw token only lives in the httpOnly
+// cookie and the user's browser. A DB leak does not yield usable tokens.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model RefreshToken {
+  id            String                        @id @default(cuid())
+  userId        String
+  user          User                          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId      String // shared across the rotation chain
+  tokenHash     String                        @unique @db.Char(64) // sha256 hex
+  parentId      String?
+  parent        RefreshToken?                 @relation("TokenChain", fields: [parentId], references: [id], onDelete: SetNull)
+  children      RefreshToken[]                @relation("TokenChain")
+  replacedById  String?                       @unique
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedReason RefreshTokenRevocationReason?
+
+  // Forensics for audit trail
+  userAgent  String? @db.VarChar(512)
+  ipAddress  String? @db.VarChar(64)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Workspace — tenant root.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Workspace {
+  id          String  @id @default(cuid())
+  slug        String  @unique @db.VarChar(32)
+  name        String  @db.VarChar(80)
+  description String? @db.VarChar(500)
+  avatarUrl   String? @db.VarChar(2048)
+
+  // Denormalized owner pointer — fast "is X the owner" check without joining
+  // WorkspaceMember. Membership row is still the source of truth for RBAC.
+  ownerId String
+  owner   User   @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Restrict)
+
+  // Reverse relations
+  members      WorkspaceMember[]
+  defaultedBy  User[]            @relation("UserDefaultWorkspace")
+  auditLogs    AuditLog[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([ownerId])
+  @@index([deletedAt])
+  @@map("workspaces")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WorkspaceMember — RBAC join table.
+//
+// Composite PK (userId, workspaceId) prevents duplicate memberships at the
+// schema level. `role` is the authoritative source for permission checks.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model WorkspaceMember {
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspaceId String
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  role        WorkspaceRole @default(MEMBER)
+
+  invitedById String?
+  invitedBy   User?   @relation("InvitedBy", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([userId, workspaceId])
+  @@index([workspaceId])
+  @@index([userId])
+  @@map("workspace_members")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AuditLog — append-only system + workspace-scoped event log.
+//
+// `workspaceId` is nullable for system-level events (e.g. user signup before
+// any workspace exists). `actorId` is nullable for system-driven actions
+// (e.g. scheduled cleanups, automated invites).
+//
+// `metadata` is jsonb — call sites stay typed via @agile-ish/contracts.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id          String  @id @default(cuid())
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id], onDelete: SetNull)
+  actorId     String?
+  actor       User?      @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  action      String     @db.VarChar(64)
+  targetType  String?    @db.VarChar(32)
+  targetId    String?    @db.VarChar(64)
+  metadata    Json       @default("{}")
+
+  ipAddress String? @db.VarChar(64)
+  userAgent String? @db.VarChar(512)
+  requestId String? @db.VarChar(64)
+
+  createdAt DateTime @default(now())
+
+  @@index([workspaceId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}

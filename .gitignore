@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+*.tsbuildinfo
+
+# Turbo
+.turbo/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Testing
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Prisma — keep schema, ignore generated client
+apps/api/src/generated/
+
+# Secrets / keys
+*.pem
+*.key
+!apps/api/keys/.gitkeep
+
+# Docker
+**/data/
+infra/docker/data/
+
+# OpenTelemetry / temp
+*.heapsnapshot
+*.cpuprofile

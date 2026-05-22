@@ -1,0 +1,21 @@
+{
+  "name": "@agile-ish/config-eslint",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "main": "base.cjs",
+  "files": ["base.cjs", "nestjs.cjs", "nextjs.cjs"],
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-promise": "^7.1.0",
+    "eslint-plugin-unicorn": "^56.0.0",
+    "eslint-plugin-unused-imports": "^4.1.4"
+  },
+  "peerDependencies": {
+    "eslint": "^8.57.0"
+  }
+}
