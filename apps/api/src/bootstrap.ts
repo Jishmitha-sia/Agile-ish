@@ -1,9 +1,10 @@
-import { ValidationPipe, type INestApplication, type LogLevel } from '@nestjs/common';
+import { type INestApplication, type LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger as PinoLogger } from 'nestjs-pino';
+import { ZodValidationPipe } from 'nestjs-zod';
 
 import { getAppConfig } from './config/config.module.js';
 
@@ -34,16 +35,10 @@ export const applyBootstrap = (app: INestApplication): void => {
   );
   app.use(cookieParser());
 
-  // Validation pipe — Zod owns the bulk via nestjs-zod / our ZodValidationPipe.
-  // This handles legacy class-based DTOs (e.g. param decoders) if any creep in.
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true,
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      forbidUnknownValues: true,
-    }),
-  );
+  // Global validation: nestjs-zod's pipe inspects controller parameters whose
+  // type extends `createZodDto(...)` and validates them against the embedded
+  // Zod schema. Non-DTO parameters pass through unchanged.
+  app.useGlobalPipes(new ZodValidationPipe());
 
   app.enableCors({
     origin: cfg.urls.corsOrigins,
