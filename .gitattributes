@@ -1,0 +1,47 @@
+# Auto-detect text files; normalize to LF in the repo.
+# Working tree gets the OS-native line ending on checkout.
+* text=auto eol=lf
+
+# Force LF for source / config / scripts (cross-platform).
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.cjs       text eol=lf
+*.mjs       text eol=lf
+*.json      text eol=lf
+*.jsonc     text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.md        text eol=lf
+*.sql       text eol=lf
+*.prisma    text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.sh        text eol=lf
+Dockerfile* text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+.env*       text eol=lf
+
+# Windows-only scripts keep CRLF.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Lockfiles are generated — collapse diffs in PRs.
+pnpm-lock.yaml -diff linguist-generated=true
+package-lock.json -diff linguist-generated=true
+
+# Binary assets.
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.webp      binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.pdf       binary
