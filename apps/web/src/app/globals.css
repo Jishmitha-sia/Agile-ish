@@ -1,0 +1,34 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Shared design tokens (variables) from the UI package. */
+@import '@agile-ish/ui/styles.css';
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply h-full;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  /* Reduced-motion respect — Tailwind transitions sit out the animation. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
