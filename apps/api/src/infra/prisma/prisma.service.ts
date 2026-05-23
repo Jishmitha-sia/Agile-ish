@@ -5,28 +5,31 @@ import {
   type OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 import { getAppConfig } from '../../config/config.module.js';
-import { Prisma, PrismaClient } from '../../generated/prisma/index.js';
 
 /**
- * Extended Prisma client.
+ * Prisma client wrapper.
  *
- * Two extensions are layered on top of the vanilla client:
+ * Responsibilities right now:
+ *   • Manage the connection lifecycle (connect on module init, disconnect on
+ *     destroy).
+ *   • Provide `withRequestContext(ctx, fn)` — wraps `fn` in a transaction and
+ *     sets the `app.user_id` / `app.workspace_id` Postgres session variables
+ *     used by RLS policies. Every authenticated request opens such a scope;
+ *     system jobs (seed, migrations, scheduled cleanups) skip it and
+ *     therefore see the RLS bypass branch in policies.
  *
- * 1. **Soft delete** — calls to `delete()` / `deleteMany()` on models that
- *    have a `deletedAt` column are rewritten to UPDATE statements setting
- *    `deletedAt = now()`. Reads on those models automatically filter
- *    `deletedAt = null` unless an explicit `withDeleted` flag is passed.
- *
- * 2. **Request context** — provides `prisma.withRequestContext(ctx, fn)`
- *    that wraps `fn` in a transaction and sets the `app.user_id` and
- *    `app.workspace_id` Postgres session variables used by RLS policies.
- *    Every authenticated request opens such a scope; system jobs that need
- *    to bypass tenant scoping must explicitly use the raw client.
+ * Soft-delete (Phase 2): the `deletedAt` columns exist on User + Workspace
+ * but are NOT auto-filtered by a client extension. When a Phase-2 feature
+ * needs soft-delete semantics, add it at the service layer with explicit
+ * `deletedAt: null` filters and an `Archive` action that updates instead of
+ * deleting. A client extension was tried in Phase 1 but Prisma's generated
+ * extension types are too strict for the generic-over-all-models pattern
+ * to typecheck cleanly — service-layer enforcement is more transparent and
+ * easier to audit anyway.
  */
-
-const SOFT_DELETE_MODELS = new Set<string>(['User', 'Workspace']);
 
 export interface RequestContext {
   userId?: string;
@@ -50,8 +53,6 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           ],
       errorFormat: 'minimal',
     });
-
-    this.$extends(softDeleteExtension);
   }
 
   async onModuleInit(): Promise<void> {
@@ -97,68 +98,3 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
  * does not accept parameter binding, so the literal must be safe.
  */
 const escapeSqlIdent = (raw: string): string => raw.replace(/[^A-Za-z0-9_-]/g, '');
-
-/**
- * Prisma client extension implementing soft-delete semantics.
- * Applies to models in SOFT_DELETE_MODELS only — append-only tables
- * (audit_logs) and join tables (workspace_members) keep hard-delete.
- */
-const softDeleteExtension = Prisma.defineExtension({
-  name: 'soft-delete',
-  query: {
-    $allModels: {
-      async delete({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model)) {
-          return (await (
-            this as unknown as { update: (a: unknown) => Promise<unknown> }
-          ).update({ ...args, data: { deletedAt: new Date() } })) as never;
-        }
-        return query(args);
-      },
-      async deleteMany({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model)) {
-          return (await (
-            this as unknown as { updateMany: (a: unknown) => Promise<unknown> }
-          ).updateMany({ ...args, data: { deletedAt: new Date() } })) as never;
-        }
-        return query(args);
-      },
-      async findFirst({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model) && !hasIncludeDeletedFlag(args)) {
-          return query({ ...args, where: mergeDeletedAtFilter(args.where) }) as never;
-        }
-        return query(args);
-      },
-      async findFirstOrThrow({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model) && !hasIncludeDeletedFlag(args)) {
-          return query({ ...args, where: mergeDeletedAtFilter(args.where) }) as never;
-        }
-        return query(args);
-      },
-      async findMany({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model) && !hasIncludeDeletedFlag(args)) {
-          return query({ ...args, where: mergeDeletedAtFilter(args.where) }) as never;
-        }
-        return query(args);
-      },
-      async findUnique({ model, args, query }) {
-        if (model && SOFT_DELETE_MODELS.has(model) && !hasIncludeDeletedFlag(args)) {
-          // findUnique by unique key cannot be combined with extra where —
-          // upgrade to findFirst with the soft-delete filter applied.
-          return (
-            this as unknown as { findFirst: (a: unknown) => Promise<unknown> }
-          ).findFirst({ ...args, where: { ...args.where, deletedAt: null } }) as never;
-        }
-        return query(args);
-      },
-    },
-  },
-});
-
-const INCLUDE_DELETED_FLAG = '__includeDeleted';
-const hasIncludeDeletedFlag = (args: { where?: Record<string, unknown> } | undefined): boolean =>
-  Boolean(args?.where?.[INCLUDE_DELETED_FLAG]);
-
-const mergeDeletedAtFilter = (
-  where: Record<string, unknown> | undefined,
-): Record<string, unknown> => ({ ...(where ?? {}), deletedAt: null });

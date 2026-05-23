@@ -10,7 +10,7 @@
  */
 import * as argon2 from 'argon2';
 
-import { PrismaClient, WorkspaceRole } from '../src/generated/prisma/index.js';
+import { PrismaClient, WorkspaceRole } from '@prisma/client';
 
 const prisma = new PrismaClient();
 

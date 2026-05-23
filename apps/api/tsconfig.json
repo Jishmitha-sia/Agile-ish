@@ -2,13 +2,14 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "@agile-ish/config-tsconfig/nestjs.json",
   "compilerOptions": {
-    "baseUrl": "./",
+    "rootDir": "./",
+    "outDir": "./dist",
     "paths": {
-      "@/*": ["src/*"],
-      "@common/*": ["src/common/*"],
-      "@config/*": ["src/config/*"],
-      "@infra/*": ["src/infra/*"],
-      "@modules/*": ["src/modules/*"]
+      "@/*": ["./src/*"],
+      "@common/*": ["./src/common/*"],
+      "@config/*": ["./src/config/*"],
+      "@infra/*": ["./src/infra/*"],
+      "@modules/*": ["./src/modules/*"]
     }
   },
   "include": ["src/**/*.ts", "test/**/*.ts", "prisma/**/*.ts"],

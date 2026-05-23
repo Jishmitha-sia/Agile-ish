@@ -23,6 +23,18 @@ const nextConfig = {
     typedRoutes: true,
   },
 
+  webpack(config) {
+    // Allow `.js` import specifiers to resolve to `.ts` / `.tsx` source files.
+    // TypeScript's `moduleResolution: Bundler` does this at type-check time;
+    // webpack needs the same alias at bundle time so we don't have to rewrite
+    // every import to drop the extension.
+    config.resolve.extensionAlias = {
+      '.js': ['.ts', '.tsx', '.js'],
+      '.jsx': ['.tsx', '.jsx'],
+    };
+    return config;
+  },
+
   async headers() {
     return [
       {

@@ -49,10 +49,16 @@ export class WorkspaceRoleGuard implements CanActivate {
       });
     }
 
+    // Build the workspace filter narrowly so Prisma doesn't see an `id: undefined`
+    // (which `exactOptionalPropertyTypes` would reject).
+    const workspaceFilter = slug
+      ? { slug, deletedAt: null }
+      : { id: id as string, deletedAt: null };
+
     const membership = await this.prisma.workspaceMember.findFirst({
       where: {
         userId: req.user.id,
-        workspace: slug ? { slug, deletedAt: null } : { id, deletedAt: null },
+        workspace: workspaceFilter,
       },
       include: { workspace: { select: { id: true, slug: true } } },
     });

@@ -163,73 +163,161 @@ BEGIN
 END;
 $$;
 
--- Workspaces: a user can see workspaces they are a member of.
--- The membership check goes via workspace_members; that table's own policy
--- gates row visibility there. We use SECURITY DEFINER to keep the policy
--- cheap and avoid recursive RLS evaluation.
-ALTER TABLE "workspaces" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "workspaces_member_select" ON "workspaces"
-  FOR SELECT
-  USING (
-    current_app_user_id() IS NULL  -- bypass when running outside request scope
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m
-      WHERE m."workspaceId" = "workspaces"."id"
-        AND m."userId" = current_app_user_id()
-    )
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SECURITY DEFINER helpers — used by RLS policies that need to look up
+-- membership/role. Postgres re-evaluates RLS policies on every relation
+-- access, so a policy that SELECTs from the same table it gates causes
+-- "infinite recursion detected in policy" errors.
+--
+-- SECURITY DEFINER functions run with the OWNER's privileges (superuser at
+-- migration time), bypassing RLS on tables they touch internally. The
+-- function's *output* still goes back to a caller subject to the original
+-- RLS policy, so this isn't an authorization bypass — it's the standard
+-- pattern to break the recursion.
+--
+-- search_path is pinned to defeat search-path injection (a SECURITY DEFINER
+-- best practice — see Postgres docs §22.6 "Writing SECURITY DEFINER Functions").
+-- ─────────────────────────────────────────────────────────────────────────────
+
+CREATE OR REPLACE FUNCTION current_user_is_workspace_member(target_workspace_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE uid TEXT;
+BEGIN
+  uid := current_app_user_id();
+  IF uid IS NULL THEN RETURN TRUE; END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM workspace_members
+    WHERE "workspaceId" = target_workspace_id AND "userId" = uid
   );
-CREATE POLICY "workspaces_member_modify" ON "workspaces"
-  FOR ALL
-  USING (
-    current_app_user_id() IS NULL
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m
-      WHERE m."workspaceId" = "workspaces"."id"
-        AND m."userId" = current_app_user_id()
-        AND m."role" IN ('OWNER', 'ADMIN')
-    )
-  )
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION current_user_is_workspace_admin(target_workspace_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE uid TEXT;
+BEGIN
+  uid := current_app_user_id();
+  IF uid IS NULL THEN RETURN TRUE; END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM workspace_members
+    WHERE "workspaceId" = target_workspace_id
+      AND "userId" = uid
+      AND "role" IN ('OWNER', 'ADMIN')
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION current_user_is_workspace_owner(target_workspace_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE uid TEXT;
+BEGIN
+  uid := current_app_user_id();
+  IF uid IS NULL THEN RETURN TRUE; END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM workspace_members
+    WHERE "workspaceId" = target_workspace_id
+      AND "userId" = uid
+      AND "role" = 'OWNER'
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION current_user_shares_workspace_with(target_user_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE uid TEXT;
+BEGIN
+  uid := current_app_user_id();
+  IF uid IS NULL THEN RETURN TRUE; END IF;
+  IF target_user_id = uid THEN RETURN TRUE; END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM workspace_members m1
+    INNER JOIN workspace_members m2 ON m1."workspaceId" = m2."workspaceId"
+    WHERE m1."userId" = uid AND m2."userId" = target_user_id
+  );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION current_user_owns_workspace(target_workspace_id TEXT)
+RETURNS BOOLEAN LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE uid TEXT;
+BEGIN
+  uid := current_app_user_id();
+  IF uid IS NULL THEN RETURN TRUE; END IF;
+  RETURN EXISTS (
+    SELECT 1 FROM workspaces
+    WHERE "id" = target_workspace_id AND "ownerId" = uid
+  );
+END;
+$$;
+
+-- Workspaces: per-command policies using SECURITY DEFINER helpers
+-- (see helper definitions above) to avoid policy-recursion on joins.
+ALTER TABLE "workspaces" ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "workspaces_select" ON "workspaces"
+  FOR SELECT
+  USING (current_user_is_workspace_member(workspaces."id"));
+
+CREATE POLICY "workspaces_insert" ON "workspaces"
+  FOR INSERT
   WITH CHECK (
-    current_app_user_id() IS NULL
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m
-      WHERE m."workspaceId" = "workspaces"."id"
-        AND m."userId" = current_app_user_id()
-        AND m."role" IN ('OWNER', 'ADMIN')
-    )
+    current_app_user_id() IS NULL OR "ownerId" = current_app_user_id()
   );
 
--- WorkspaceMembers: a user can see memberships for workspaces they belong to.
+CREATE POLICY "workspaces_update" ON "workspaces"
+  FOR UPDATE
+  USING (current_user_is_workspace_admin(workspaces."id"))
+  WITH CHECK (current_user_is_workspace_admin(workspaces."id"));
+
+CREATE POLICY "workspaces_delete" ON "workspaces"
+  FOR DELETE
+  USING (current_user_is_workspace_owner(workspaces."id"));
+
+-- WorkspaceMembers: per-command policies using helpers.
 ALTER TABLE "workspace_members" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "workspace_members_visible" ON "workspace_members"
+
+CREATE POLICY "workspace_members_select" ON "workspace_members"
   FOR SELECT
-  USING (
-    current_app_user_id() IS NULL
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m2
-      WHERE m2."workspaceId" = "workspace_members"."workspaceId"
-        AND m2."userId" = current_app_user_id()
-    )
-  );
-CREATE POLICY "workspace_members_admin_modify" ON "workspace_members"
-  FOR ALL
-  USING (
-    current_app_user_id() IS NULL
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m2
-      WHERE m2."workspaceId" = "workspace_members"."workspaceId"
-        AND m2."userId" = current_app_user_id()
-        AND m2."role" IN ('OWNER', 'ADMIN')
-    )
-  )
+  USING (current_user_is_workspace_member(workspace_members."workspaceId"));
+
+-- INSERT allows three paths:
+--   1. System context (no current user) — signup, seed, migrations
+--   2. Self-bootstrap — insert your own OWNER row in a workspace you own
+--      (the immediate post-create-workspace step)
+--   3. Admin add — existing admin/owner adds someone
+CREATE POLICY "workspace_members_insert" ON "workspace_members"
+  FOR INSERT
   WITH CHECK (
     current_app_user_id() IS NULL
-    OR EXISTS (
-      SELECT 1 FROM "workspace_members" m2
-      WHERE m2."workspaceId" = "workspace_members"."workspaceId"
-        AND m2."userId" = current_app_user_id()
-        AND m2."role" IN ('OWNER', 'ADMIN')
+    OR (
+      workspace_members."userId" = current_app_user_id()
+      AND current_user_owns_workspace(workspace_members."workspaceId")
     )
+    OR current_user_is_workspace_admin(workspace_members."workspaceId")
+  );
+
+CREATE POLICY "workspace_members_update" ON "workspace_members"
+  FOR UPDATE
+  USING (current_user_is_workspace_admin(workspace_members."workspaceId"))
+  WITH CHECK (current_user_is_workspace_admin(workspace_members."workspaceId"));
+
+CREATE POLICY "workspace_members_delete" ON "workspace_members"
+  FOR DELETE
+  USING (
+    current_app_user_id() IS NULL
+    -- Self-leave (last-owner check is enforced at service layer).
+    OR workspace_members."userId" = current_app_user_id()
+    OR current_user_is_workspace_admin(workspace_members."workspaceId")
   );
 
 -- AuditLogs: visible to members of the workspace; system-scoped logs
@@ -239,16 +327,8 @@ ALTER TABLE "audit_logs" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "audit_logs_workspace_select" ON "audit_logs"
   FOR SELECT
   USING (
-    current_app_user_id() IS NULL
-    OR (
-      "workspaceId" IS NOT NULL
-      AND EXISTS (
-        SELECT 1 FROM "workspace_members" m
-        WHERE m."workspaceId" = "audit_logs"."workspaceId"
-          AND m."userId" = current_app_user_id()
-          AND m."role" IN ('OWNER', 'ADMIN')
-      )
-    )
+    "workspaceId" IS NOT NULL
+    AND current_user_is_workspace_admin("audit_logs"."workspaceId")
   );
 -- INSERT policy: any authenticated session can append; the service layer
 -- decides what actor/action gets recorded.
@@ -256,17 +336,30 @@ CREATE POLICY "audit_logs_insert" ON "audit_logs"
   FOR INSERT
   WITH CHECK (current_app_user_id() IS NULL OR "actorId" = current_app_user_id() OR "actorId" IS NULL);
 
--- Users / RefreshTokens are accessed via auth flows that already scope by
--- userId in the service layer; RLS adds a minimal "you can only read your
--- own row" guard.
+-- Users: RLS-enabled with per-command policies.
+--   • SELECT  → yourself OR anyone you share a workspace with (needed so
+--               /workspaces/:slug/members can JOIN users for co-members).
+--   • INSERT  → only when no current user is set (signup, seed, migrations).
+--   • UPDATE  → only your own row.
+--   • DELETE  → only when no current user is set (system / admin tooling).
 ALTER TABLE "users" ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users_self_select" ON "users"
+
+CREATE POLICY "users_select" ON "users"
   FOR SELECT
-  USING (current_app_user_id() IS NULL OR "id" = current_app_user_id());
-CREATE POLICY "users_self_update" ON "users"
+  USING (current_user_shares_workspace_with(users."id"));
+
+CREATE POLICY "users_insert" ON "users"
+  FOR INSERT
+  WITH CHECK (current_app_user_id() IS NULL);
+
+CREATE POLICY "users_update" ON "users"
   FOR UPDATE
   USING (current_app_user_id() IS NULL OR "id" = current_app_user_id())
   WITH CHECK (current_app_user_id() IS NULL OR "id" = current_app_user_id());
+
+CREATE POLICY "users_delete" ON "users"
+  FOR DELETE
+  USING (current_app_user_id() IS NULL);
 
 ALTER TABLE "refresh_tokens" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "refresh_tokens_self_all" ON "refresh_tokens"

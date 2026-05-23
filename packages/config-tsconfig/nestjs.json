@@ -4,7 +4,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "module": "commonjs",
-    "moduleResolution": "node",
+    "moduleResolution": "node10",
     "target": "ES2022",
     "lib": ["ES2022"],
     "experimentalDecorators": true,
@@ -13,9 +13,8 @@
     "isolatedModules": false,
     "declaration": true,
     "declarationMap": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
     "removeComments": false,
-    "types": ["node"]
+    "types": ["node"],
+    "ignoreDeprecations": "5.0"
   }
 }

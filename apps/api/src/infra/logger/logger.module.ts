@@ -53,12 +53,14 @@ import { REQUEST_ID_HEADER } from '../../common/interceptors/request-id.intercep
               ],
               censor: '[REDACTED]',
             },
-            transport: cfg.runtime.logPretty
+            ...(cfg.runtime.logPretty
               ? {
-                  target: 'pino-pretty',
-                  options: { singleLine: true, translateTime: 'SYS:HH:MM:ss.l' },
+                  transport: {
+                    target: 'pino-pretty',
+                    options: { singleLine: true, translateTime: 'SYS:HH:MM:ss.l' },
+                  },
                 }
-              : undefined,
+              : {}),
           },
         };
       },

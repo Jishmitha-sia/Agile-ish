@@ -2,8 +2,9 @@ import { randomUUID } from 'node:crypto';
 
 import { Injectable, Logger } from '@nestjs/common';
 
+import { RefreshTokenRevocationReason } from '@prisma/client';
+
 import { PrismaService } from '../../../infra/prisma/prisma.service.js';
-import { RefreshTokenRevocationReason } from '../../../generated/prisma/index.js';
 
 import { TokenService, type RefreshTokenSecret } from './token.service.js';
 

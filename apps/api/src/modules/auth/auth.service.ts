@@ -14,9 +14,10 @@ import {
   type WorkspaceRole,
 } from '@agile-ish/contracts';
 
+import { RefreshTokenRevocationReason } from '@prisma/client';
+
 import { EventBus } from '../../infra/events/events.module.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
-import { RefreshTokenRevocationReason } from '../../generated/prisma/index.js';
 
 import {
   LoginFailedEvent,
@@ -56,12 +57,17 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly passwords: PasswordService,
     private readonly tokens: TokenService,
-    private readonly refresh: RefreshTokenService,
+    private readonly refreshTokens: RefreshTokenService,
     private readonly events: EventBus,
   ) {}
 
   async signup(
-    input: { email: string; password: string; displayName: string; workspaceName?: string },
+    input: {
+      email: string;
+      password: string;
+      displayName: string;
+      workspaceName?: string | undefined;
+    },
     ctx: AuthFlowContext = {},
   ): Promise<SignupOrLoginResult> {
     const passwordHash = await this.passwords.hash(input.password);
@@ -176,7 +182,7 @@ export class AuthService {
     presentedRaw: string,
     ctx: AuthFlowContext = {},
   ): Promise<SignupOrLoginResult> {
-    const result = await this.refresh.rotate({
+    const result = await this.refreshTokens.rotate({
       presentedRaw,
       ...(ctx.userAgent ? { userAgent: ctx.userAgent } : {}),
       ...(ctx.ipAddress ? { ipAddress: ctx.ipAddress } : {}),
@@ -208,7 +214,7 @@ export class AuthService {
   async logout(refreshRaw: string | undefined, userId: string): Promise<void> {
     if (refreshRaw) {
       const hash = this.tokens.hashRefreshSecret(refreshRaw);
-      await this.refresh.revoke(hash, RefreshTokenRevocationReason.LOGOUT);
+      await this.refreshTokens.revoke(hash, RefreshTokenRevocationReason.LOGOUT);
     }
     await this.events.publish(
       new UserLoggedOutEvent({
@@ -250,7 +256,7 @@ export class AuthService {
   // ─── helpers ─────────────────────────────────────────────────────────────
 
   private async issueSession(userId: string, ctx: AuthFlowContext): Promise<SignupOrLoginResult> {
-    const family = await this.refresh.createFamily({
+    const family = await this.refreshTokens.createFamily({
       userId,
       ...(ctx.userAgent ? { userAgent: ctx.userAgent } : {}),
       ...(ctx.ipAddress ? { ipAddress: ctx.ipAddress } : {}),

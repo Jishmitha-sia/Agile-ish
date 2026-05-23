@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -39,6 +41,10 @@ export class EventBus implements OnModuleInit, OnModuleDestroy {
   // Track in-flight handler invocations so shutdown can drain them.
   private readonly inflight = new Set<Promise<unknown>>();
   private subscribed = false;
+  // Per-process identifier — stamped on published events so the same
+  // instance can recognise and drop its own Redis pub/sub echo (we
+  // already dispatched locally before publishing).
+  private readonly instanceId = randomUUID();
 
   constructor(
     private readonly redis: RedisService,
@@ -76,7 +82,9 @@ export class EventBus implements OnModuleInit, OnModuleDestroy {
    */
   async publish<TEvent extends DomainEvent>(event: TEvent): Promise<void> {
     const channel = `${this.channelPrefix}${event.eventName}`;
-    const payload = JSON.stringify(event.toJSON());
+    // Stamp the payload with our instance id so the echo we'll receive
+    // via our own Redis subscription is recognised and dropped.
+    const payload = JSON.stringify({ ...event.toJSON(), __originInstance: this.instanceId });
 
     // Fire local handlers ourselves so this instance doesn't depend on a
     // round-trip through Redis to see its own events.
@@ -124,13 +132,16 @@ export class EventBus implements OnModuleInit, OnModuleDestroy {
 
   private async dispatchExternal(channel: string, raw: string): Promise<void> {
     const eventName = channel.slice(this.channelPrefix.length);
-    let parsed: SerialisedDomainEvent;
+    let parsed: SerialisedDomainEvent & { __originInstance?: string };
     try {
-      parsed = JSON.parse(raw) as SerialisedDomainEvent;
+      parsed = JSON.parse(raw) as SerialisedDomainEvent & { __originInstance?: string };
     } catch (err) {
       this.logger.warn({ err, channel }, 'Dropping malformed event message');
       return;
     }
+
+    // Drop our own echo — we already dispatched locally before publishing.
+    if (parsed.__originInstance === this.instanceId) return;
 
     // Reconstruct as a plain object preserving the DomainEvent contract
     // for local handlers — we don't materialise the original class, so

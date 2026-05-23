@@ -12,7 +12,7 @@
  */
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { OTLPTraceExporter } from '@opentelemetry/exporter-trace-otlp-http';
-import { resourceFromAttributes } from '@opentelemetry/resources';
+import { Resource } from '@opentelemetry/resources';
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import {
   ATTR_SERVICE_NAME,
@@ -32,7 +32,7 @@ export const startTelemetry = (): void => {
   });
 
   sdk = new NodeSDK({
-    resource: resourceFromAttributes({
+    resource: new Resource({
       [ATTR_SERVICE_NAME]: env.OTEL_SERVICE_NAME,
       [ATTR_SERVICE_VERSION]: process.env['npm_package_version'] ?? '0.0.0',
     }),

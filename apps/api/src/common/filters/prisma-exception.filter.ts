@@ -7,8 +7,14 @@ import {
 } from '@nestjs/common';
 import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
 import type { Response } from 'express';
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientUnknownRequestError,
+  PrismaClientValidationError,
+} from '@prisma/client/runtime/library';
 
-import { Prisma } from '../../generated/prisma/index.js';
 import type { AuthenticatedRequest } from '../types/auth.types.js';
 
 /**
@@ -28,11 +34,11 @@ import type { AuthenticatedRequest } from '../types/auth.types.js';
  * they indicate a programming bug. Map to 500 so they surface in alerts.
  */
 @Catch(
-  Prisma.PrismaClientKnownRequestError,
-  Prisma.PrismaClientValidationError,
-  Prisma.PrismaClientUnknownRequestError,
-  Prisma.PrismaClientRustPanicError,
-  Prisma.PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+  PrismaClientUnknownRequestError,
+  PrismaClientRustPanicError,
+  PrismaClientInitializationError,
 )
 export class PrismaExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
@@ -48,11 +54,11 @@ export class PrismaExceptionFilter implements ExceptionFilter {
   }
 
   private toResponse(exception: unknown): { status: number; body: ApiErrorResponse } {
-    if (exception instanceof Prisma.PrismaClientKnownRequestError) {
+    if (exception instanceof PrismaClientKnownRequestError) {
       return this.mapKnownRequest(exception);
     }
 
-    if (exception instanceof Prisma.PrismaClientValidationError) {
+    if (exception instanceof PrismaClientValidationError) {
       return {
         status: HttpStatus.INTERNAL_SERVER_ERROR,
         body: { code: 'INTERNAL_ERROR', message: 'Database validation error' },
@@ -60,9 +66,9 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     }
 
     if (
-      exception instanceof Prisma.PrismaClientInitializationError ||
-      exception instanceof Prisma.PrismaClientRustPanicError ||
-      exception instanceof Prisma.PrismaClientUnknownRequestError
+      exception instanceof PrismaClientInitializationError ||
+      exception instanceof PrismaClientRustPanicError ||
+      exception instanceof PrismaClientUnknownRequestError
     ) {
       return {
         status: HttpStatus.SERVICE_UNAVAILABLE,
@@ -74,7 +80,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     throw exception instanceof Error ? exception : new HttpException('Unknown', 500);
   }
 
-  private mapKnownRequest(err: Prisma.PrismaClientKnownRequestError): {
+  private mapKnownRequest(err: PrismaClientKnownRequestError): {
     status: number;
     body: ApiErrorResponse;
   } {

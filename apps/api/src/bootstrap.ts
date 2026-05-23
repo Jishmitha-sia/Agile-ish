@@ -1,8 +1,9 @@
-import { type INestApplication, type LogLevel } from '@nestjs/common';
+import { type LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
+import helmet, { type HelmetOptions } from 'helmet';
 import { Logger as PinoLogger } from 'nestjs-pino';
 import { ZodValidationPipe } from 'nestjs-zod';
 
@@ -20,19 +21,20 @@ import { getAppConfig } from './config/config.module.js';
  *      preflight responses get the right headers.
  *   6. Graceful shutdown hooks — wire SIGTERM/SIGINT to the Nest lifecycle.
  */
-export const applyBootstrap = (app: INestApplication): void => {
+export const applyBootstrap = (app: NestExpressApplication): void => {
   const config = app.get(ConfigService);
   const cfg = getAppConfig(config);
 
   // Replace Nest's default logger with the structured pino instance.
   app.useLogger(app.get(PinoLogger));
 
-  app.use(
-    helmet({
-      contentSecurityPolicy: cfg.runtime.isProduction ? undefined : false,
-      crossOriginEmbedderPolicy: false,
-    }),
-  );
+  // Build helmet options conditionally — `exactOptionalPropertyTypes` forbids
+  // assigning `undefined` to optional props; we must omit the key instead.
+  const helmetOpts: HelmetOptions = { crossOriginEmbedderPolicy: false };
+  if (!cfg.runtime.isProduction) {
+    helmetOpts.contentSecurityPolicy = false;
+  }
+  app.use(helmet(helmetOpts));
   app.use(cookieParser());
 
   // Global validation: nestjs-zod's pipe inspects controller parameters whose
@@ -41,14 +43,14 @@ export const applyBootstrap = (app: INestApplication): void => {
   app.useGlobalPipes(new ZodValidationPipe());
 
   app.enableCors({
-    origin: cfg.urls.corsOrigins,
+    origin: [...cfg.urls.corsOrigins],
     credentials: true,
     maxAge: 600,
     exposedHeaders: ['x-request-id'],
   });
 
   app.enableShutdownHooks(); // wires SIGTERM/SIGINT → onModuleDestroy
-  app.set?.('trust proxy', cfg.runtime.isProduction ? 1 : 'loopback');
+  app.set('trust proxy', cfg.runtime.isProduction ? 1 : 'loopback');
 
   // OpenAPI is served in non-production for developer convenience. In
   // production, gate behind an internal endpoint or strip from the build.
