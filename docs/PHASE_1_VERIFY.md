@@ -6,7 +6,7 @@ After Batch 5 lands, this is the recipe to get the whole local stack running and
 
 ```powershell
 # Node 20.11+ pinned in .nvmrc
-nvm install 20.11.0     # or use fnm / volta
+nvm install 22.13.0     # or use fnm / volta
 nvm use
 
 # pnpm via corepack

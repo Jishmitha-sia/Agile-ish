@@ -11,7 +11,7 @@
 # them — that's a Next.js architectural choice, not a project one.
 # ─────────────────────────────────────────────────────────────────────────────
 
-ARG NODE_VERSION=20.11.0
+ARG NODE_VERSION=22.13.0
 
 # ───── Base ──────────────────────────────────────────────────────────────────
 FROM node:${NODE_VERSION}-bookworm-slim AS base

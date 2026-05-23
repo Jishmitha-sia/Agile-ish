@@ -91,7 +91,7 @@ services:
       context: ../..
       dockerfile: infra/docker/api.Dockerfile
       args:
-        NODE_VERSION: "20.11.0"
+        NODE_VERSION: "22.13.0"
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -124,7 +124,7 @@ services:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
       args:
-        NODE_VERSION: "20.11.0"
+        NODE_VERSION: "22.13.0"
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_REFRESH_COOKIE_NAME: ${REFRESH_COOKIE_NAME}

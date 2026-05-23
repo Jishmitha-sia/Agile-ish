@@ -5,7 +5,7 @@
   "description": "Agile-ish — open-source AI-native Scrum collaboration platform.",
   "license": "AGPL-3.0-or-later",
   "engines": {
-    "node": ">=20.11.0",
+    "node": ">=22.13.0",
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.12.0",
