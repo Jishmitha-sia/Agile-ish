@@ -5,8 +5,6 @@ import {
   HttpStatus,
   type ExceptionFilter,
 } from '@nestjs/common';
-import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
-import type { Response } from 'express';
 import {
   PrismaClientInitializationError,
   PrismaClientKnownRequestError,
@@ -16,6 +14,9 @@ import {
 } from '@prisma/client/runtime/library';
 
 import type { AuthenticatedRequest } from '../types/auth.types.js';
+import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
+import type { Response } from 'express';
+
 
 /**
  * Maps Prisma's runtime errors into the unified `ApiErrorResponse` envelope.
@@ -86,7 +87,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
   } {
     switch (err.code) {
       case 'P2002': {
-        const target = (err.meta?.['target'] as string[] | string | undefined) ?? 'value';
+        const target = (err.meta?.target as string[] | string | undefined) ?? 'value';
         return {
           status: HttpStatus.CONFLICT,
           body: this.envelope('CONFLICT', `A record with the same ${this.fmtTarget(target)} already exists`),

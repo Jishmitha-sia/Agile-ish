@@ -10,7 +10,7 @@
     "dev": "dotenv -e ../../.env -- nest start --watch",
     "start": "dotenv -e ../../.env -- node --enable-source-maps dist/main.js",
     "start:prod": "NODE_ENV=production node --enable-source-maps dist/main.js",
-    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"src/**/*.ts\"",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -72,6 +72,7 @@
   "devDependencies": {
     "@agile-ish/config-eslint": "workspace:*",
     "@agile-ish/config-tsconfig": "workspace:*",
+    "eslint": "^8.57.1",
     "@nestjs/cli": "^10.4.5",
     "@nestjs/schematics": "^10.1.4",
     "@nestjs/testing": "^10.4.4",

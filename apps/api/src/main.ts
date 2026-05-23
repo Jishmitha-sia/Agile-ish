@@ -8,12 +8,14 @@ import 'reflect-metadata';
 
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
-import type { NestExpressApplication } from '@nestjs/platform-express';
+
 
 import { AppModule } from './app.module.js';
 import { applyBootstrap, nestLogLevels } from './bootstrap.js';
 import { getAppConfig } from './config/config.module.js';
 import { parseEnv } from './config/env.schema.js';
+
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 async function bootstrap(): Promise<void> {
   // Fail-fast: validate process.env before Nest constructs anything.

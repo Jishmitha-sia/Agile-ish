@@ -1,6 +1,7 @@
+import { DomainEvent } from '../../../infra/events/events.module.js';
+
 import type { WorkspaceRole } from '@agile-ish/contracts';
 
-import { DomainEvent } from '../../../infra/events/events.module.js';
 
 interface WorkspaceCreatedPayload extends Record<string, unknown> {
   workspaceId: string;

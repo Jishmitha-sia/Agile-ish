@@ -1,15 +1,16 @@
 'use client';
 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+
+import { getApiClient } from '../lib/api-client.js';
+import { useAuthStore } from '../stores/auth.store.js';
+
 import type {
   AuthenticatedUser,
   LoginRequest,
   SessionResponse,
   SignupRequest,
 } from '@agile-ish/contracts';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-
-import { getApiClient } from '../lib/api-client.js';
-import { useAuthStore } from '../stores/auth.store.js';
 
 /**
  * TanStack Query hooks for the auth surface.
@@ -24,7 +25,7 @@ import { useAuthStore } from '../stores/auth.store.js';
 export const useLogin = () => {
   return useMutation({
     mutationFn: async (input: LoginRequest): Promise<SessionResponse> => {
-      return getApiClient().post<SessionResponse>('/auth/login', input);
+      return await getApiClient().post<SessionResponse>('/auth/login', input);
     },
     onSuccess: (session) => {
       useAuthStore.getState().setSession(session);
@@ -35,7 +36,7 @@ export const useLogin = () => {
 export const useSignup = () => {
   return useMutation({
     mutationFn: async (input: SignupRequest): Promise<SessionResponse> => {
-      return getApiClient().post<SessionResponse>('/auth/signup', input);
+      return await getApiClient().post<SessionResponse>('/auth/signup', input);
     },
     onSuccess: (session) => {
       useAuthStore.getState().setSession(session);
@@ -62,7 +63,7 @@ export const useCurrentUser = () => {
     queryKey: ['users', 'me'],
     enabled: status === 'authenticated',
     queryFn: async (): Promise<AuthenticatedUser> => {
-      return getApiClient().get<AuthenticatedUser>('/auth/me');
+      return await getApiClient().get<AuthenticatedUser>('/auth/me');
     },
   });
 };

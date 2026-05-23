@@ -1,3 +1,4 @@
+import { hasWorkspaceRole, type WorkspaceId, type WorkspaceRole } from '@agile-ish/contracts';
 import {
   CanActivate,
   ExecutionContext,
@@ -7,12 +8,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { hasWorkspaceRole, type WorkspaceId, type WorkspaceRole } from '@agile-ish/contracts';
+
+import { PrismaService } from '../../../infra/prisma/prisma.service.js';
+import { REQUIRE_ROLE_KEY } from '../decorators/require-role.decorator.js';
 
 import type { AuthenticatedRequest } from '../../../common/types/auth.types.js';
-import { PrismaService } from '../../../infra/prisma/prisma.service.js';
 
-import { REQUIRE_ROLE_KEY } from '../decorators/require-role.decorator.js';
 
 /**
  * Resolves the request's workspace (from `:workspaceSlug` or `:workspaceId`
@@ -41,7 +42,7 @@ export class WorkspaceRoleGuard implements CanActivate {
       throw new UnauthorizedException({ code: 'UNAUTHORIZED', message: 'Authentication required' });
     }
 
-    const { slug, id } = this.extractWorkspaceParam(req.params as Record<string, string | undefined>);
+    const { slug, id } = this.extractWorkspaceParam(req.params);
     if (!slug && !id) {
       throw new NotFoundException({
         code: 'NOT_FOUND',
@@ -53,7 +54,7 @@ export class WorkspaceRoleGuard implements CanActivate {
     // (which `exactOptionalPropertyTypes` would reject).
     const workspaceFilter = slug
       ? { slug, deletedAt: null }
-      : { id: id as string, deletedAt: null };
+      : { id: id!, deletedAt: null };
 
     const membership = await this.prisma.workspaceMember.findFirst({
       where: {
@@ -71,10 +72,10 @@ export class WorkspaceRoleGuard implements CanActivate {
     req.workspace = {
       id: membership.workspace.id as WorkspaceId,
       slug: membership.workspace.slug,
-      role: membership.role as WorkspaceRole,
+      role: membership.role,
     };
 
-    if (required && !hasWorkspaceRole(membership.role as WorkspaceRole, required)) {
+    if (required && !hasWorkspaceRole(membership.role, required)) {
       throw new ForbiddenException({
         code: 'FORBIDDEN',
         message: `Requires role ${required} or higher`,
@@ -88,8 +89,8 @@ export class WorkspaceRoleGuard implements CanActivate {
     slug?: string;
     id?: string;
   } {
-    const slug = params['workspaceSlug'];
-    const id = params['workspaceId'];
+    const slug = params.workspaceSlug;
+    const id = params.workspaceId;
     return {
       ...(slug ? { slug } : {}),
       ...(id ? { id } : {}),

@@ -1,5 +1,5 @@
-import { SetMetadata } from '@nestjs/common';
 import { type WorkspaceRole } from '@agile-ish/contracts';
+import { SetMetadata } from '@nestjs/common';
 
 /**
  * Declare the minimum workspace role required for a handler.

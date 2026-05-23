@@ -1,4 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+
+import { PrismaService } from '../../infra/prisma/prisma.service.js';
+
 import type {
   UpdateProfileRequest,
   UserId,
@@ -6,7 +9,6 @@ import type {
   WorkspaceMembership,
 } from '@agile-ish/contracts';
 
-import { PrismaService } from '../../infra/prisma/prisma.service.js';
 
 @Injectable()
 export class UsersService {
@@ -39,7 +41,7 @@ export class UsersService {
         ...(patch.locale !== undefined ? { locale: patch.locale } : {}),
       },
     });
-    return this.getPrivateProfile(userId);
+    return await this.getPrivateProfile(userId);
   }
 
   async listMemberships(userId: UserId): Promise<WorkspaceMembership[]> {
@@ -52,7 +54,7 @@ export class UsersService {
       workspaceId: m.workspaceId as WorkspaceMembership['workspaceId'],
       workspaceSlug: m.workspace.slug,
       workspaceName: m.workspace.name,
-      role: m.role as WorkspaceMembership['role'],
+      role: m.role,
       joinedAt: m.joinedAt.toISOString(),
     }));
   }

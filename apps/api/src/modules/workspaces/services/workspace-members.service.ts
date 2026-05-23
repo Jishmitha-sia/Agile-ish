@@ -1,10 +1,4 @@
 import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import {
   hasWorkspaceRole,
   type InviteMemberRequest,
   type UserId,
@@ -12,10 +6,15 @@ import {
   type WorkspaceMember,
   type WorkspaceRole,
 } from '@agile-ish/contracts';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { EventBus } from '../../../infra/events/events.module.js';
 import { PrismaService } from '../../../infra/prisma/prisma.service.js';
-
 import {
   WorkspaceMemberInvitedEvent,
   WorkspaceMemberJoinedEvent,
@@ -54,7 +53,7 @@ export class WorkspaceMembersService {
     return rows.map((m) => ({
       userId: m.userId as UserId,
       workspaceId: m.workspaceId as WorkspaceId,
-      role: m.role as WorkspaceRole,
+      role: m.role,
       joinedAt: m.joinedAt.toISOString(),
       user: {
         id: m.user.id as UserId,
@@ -87,7 +86,7 @@ export class WorkspaceMembersService {
           workspaceId,
           actorId,
           email: input.email,
-          role: input.role as WorkspaceRole,
+          role: input.role,
         }),
       );
       return { pending: true, email: input.email };
@@ -107,7 +106,7 @@ export class WorkspaceMembersService {
       data: {
         userId: user.id,
         workspaceId,
-        role: input.role as WorkspaceRole,
+        role: input.role,
         invitedById: actorId,
       },
       include: {
@@ -119,14 +118,14 @@ export class WorkspaceMembersService {
       new WorkspaceMemberJoinedEvent({
         workspaceId,
         userId: user.id,
-        role: input.role as WorkspaceRole,
+        role: input.role,
       }),
     );
 
     return {
       userId: created.userId as UserId,
       workspaceId: created.workspaceId as WorkspaceId,
-      role: created.role as WorkspaceRole,
+      role: created.role,
       joinedAt: created.joinedAt.toISOString(),
       user: {
         id: created.user.id as UserId,
@@ -157,7 +156,7 @@ export class WorkspaceMembersService {
     if (!target) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Member not found' });
     }
-    if ((target.role as WorkspaceRole) === 'OWNER') {
+    if ((target.role) === 'OWNER') {
       throw new ForbiddenException({
         code: 'FORBIDDEN',
         message: 'Cannot change the OWNER role here',
@@ -182,7 +181,7 @@ export class WorkspaceMembersService {
         workspaceId,
         actorId,
         userId: targetUserId,
-        fromRole: target.role as WorkspaceRole,
+        fromRole: target.role,
         toRole: nextRole,
       }),
     );
@@ -195,7 +194,7 @@ export class WorkspaceMembersService {
     if (!target) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Member not found' });
     }
-    if ((target.role as WorkspaceRole) === 'OWNER') {
+    if ((target.role) === 'OWNER') {
       const ownerCount = await this.prisma.workspaceMember.count({
         where: { workspaceId, role: 'OWNER' },
       });

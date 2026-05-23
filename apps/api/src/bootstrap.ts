@@ -1,6 +1,5 @@
 import { type LogLevel } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import cookieParser from 'cookie-parser';
 import helmet, { type HelmetOptions } from 'helmet';
@@ -8,6 +7,8 @@ import { Logger as PinoLogger } from 'nestjs-pino';
 import { ZodValidationPipe } from 'nestjs-zod';
 
 import { getAppConfig } from './config/config.module.js';
+
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 /**
  * Apply cross-cutting middleware and server settings.
@@ -57,7 +58,7 @@ export const applyBootstrap = (app: NestExpressApplication): void => {
   if (!cfg.runtime.isProduction) {
     const doc = new DocumentBuilder()
       .setTitle('Agile-ish API')
-      .setVersion(process.env['npm_package_version'] ?? '0.0.0')
+      .setVersion(process.env.npm_package_version ?? '0.0.0')
       .addCookieAuth(cfg.cookies.refreshName)
       .addBearerAuth()
       .build();

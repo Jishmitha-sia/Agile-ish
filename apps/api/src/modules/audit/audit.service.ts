@@ -1,7 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
-import type { AuditAction } from '@agile-ish/contracts';
+import { Prisma } from '@prisma/client';
 
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
+
+import type { AuditAction } from '@agile-ish/contracts';
+
 
 /**
  * Append-only audit log writer.
@@ -47,7 +50,7 @@ export class AuditService {
           ...(input.workspaceId ? { workspaceId: input.workspaceId } : {}),
           ...(input.targetType ? { targetType: input.targetType } : {}),
           ...(input.targetId ? { targetId: input.targetId } : {}),
-          metadata: (input.metadata ?? {}) as object,
+          metadata: (input.metadata ?? {}) as Prisma.InputJsonValue,
           ...(input.ipAddress ? { ipAddress: input.ipAddress } : {}),
           ...(input.userAgent ? { userAgent: input.userAgent } : {}),
           ...(input.requestId ? { requestId: input.requestId } : {}),

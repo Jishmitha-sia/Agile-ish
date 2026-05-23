@@ -34,7 +34,7 @@ export const startTelemetry = (): void => {
   sdk = new NodeSDK({
     resource: new Resource({
       [ATTR_SERVICE_NAME]: env.OTEL_SERVICE_NAME,
-      [ATTR_SERVICE_VERSION]: process.env['npm_package_version'] ?? '0.0.0',
+      [ATTR_SERVICE_VERSION]: process.env.npm_package_version ?? '0.0.0',
     }),
     traceExporter: exporter,
     instrumentations: [

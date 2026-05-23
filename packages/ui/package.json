@@ -33,6 +33,7 @@
     "@agile-ish/config-tsconfig": "workspace:*",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "eslint": "^8.57.1",
     "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.13",
     "typescript": "^5.6.2"

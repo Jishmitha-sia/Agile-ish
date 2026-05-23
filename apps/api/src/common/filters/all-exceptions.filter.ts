@@ -6,11 +6,12 @@ import {
   Logger,
   type ExceptionFilter,
 } from '@nestjs/common';
-import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
-import type { Response } from 'express';
 import { ZodError } from 'zod';
 
 import type { AuthenticatedRequest } from '../types/auth.types.js';
+import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
+import type { Response } from 'express';
+
 
 /**
  * Global catch-all filter. Every non-2xx response goes through here and
@@ -102,12 +103,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     raw: Record<string, unknown>,
     status: number,
   ): { code: ApiErrorCode; message: string; issues?: ApiErrorResponse['issues'] } {
-    const code = (raw['code'] as ApiErrorCode | undefined) ?? this.codeForStatus(status);
+    const code = (raw.code as ApiErrorCode | undefined) ?? this.codeForStatus(status);
     const message =
-      (raw['message'] as string | string[] | undefined) instanceof Array
-        ? (raw['message'] as string[]).join('; ')
-        : ((raw['message'] as string | undefined) ?? this.defaultMessage(status));
-    const issues = raw['issues'] as ApiErrorResponse['issues'];
+      (raw.message as string | string[] | undefined) instanceof Array
+        ? (raw.message as string[]).join('; ')
+        : ((raw.message as string | undefined) ?? this.defaultMessage(status));
+    const issues = raw.issues as ApiErrorResponse['issues'];
     return issues ? { code, message: String(message), issues } : { code, message: String(message) };
   }
 

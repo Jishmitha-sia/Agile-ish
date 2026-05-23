@@ -19,9 +19,7 @@ const nextConfig = {
   output: 'standalone',
   transpilePackages: ['@agile-ish/contracts', '@agile-ish/ui'],
 
-  experimental: {
-    typedRoutes: true,
-  },
+  typedRoutes: true,
 
   webpack(config) {
     // Allow `.js` import specifiers to resolve to `.ts` / `.tsx` source files.

@@ -31,7 +31,7 @@ export class PasswordService {
   }
 
   async hash(plain: string): Promise<string> {
-    return argon2.hash(plain, this.hashOptions);
+    return await argon2.hash(plain, this.hashOptions);
   }
 
   async verify(hash: string, plain: string): Promise<boolean> {
@@ -52,7 +52,7 @@ export class PasswordService {
     const ok = await this.verify(hash, plain);
     if (!ok) return null;
     if (argon2.needsRehash(hash, this.hashOptions)) {
-      return this.hash(plain);
+      return await this.hash(plain);
     }
     return null;
   }

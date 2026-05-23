@@ -15,7 +15,7 @@ import { NextResponse, type NextRequest } from 'next/server';
  * and middleware always agree. Edge runtime can read NEXT_PUBLIC_* env at
  * build time without polyfills.
  */
-const REFRESH_COOKIE = process.env['NEXT_PUBLIC_REFRESH_COOKIE_NAME'] ?? 'agile_rt';
+const REFRESH_COOKIE = process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME ?? 'agile_rt';
 
 const AUTH_ROUTES = ['/login', '/signup'];
 

@@ -1,7 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
 import { Injectable, Logger } from '@nestjs/common';
-
 import { RefreshTokenRevocationReason } from '@prisma/client';
 
 import { PrismaService } from '../../../infra/prisma/prisma.service.js';
@@ -191,6 +190,6 @@ export class RefreshTokenService {
   /** Resolve a refresh token to its row (used by /auth/refresh + /auth/logout). */
   async findByRaw(raw: string) {
     const hash = this.tokens.hashRefreshSecret(raw);
-    return this.prisma.refreshToken.findUnique({ where: { tokenHash: hash } });
+    return await this.prisma.refreshToken.findUnique({ where: { tokenHash: hash } });
   }
 }

@@ -24,9 +24,9 @@ const parseClient = (): z.infer<typeof clientSchema> => {
   // `process.env.NEXT_PUBLIC_*` references are statically replaced by the
   // Next.js build — they MUST be referenced directly, not via dynamic key.
   const result = clientSchema.safeParse({
-    NEXT_PUBLIC_API_BASE_URL: process.env['NEXT_PUBLIC_API_BASE_URL'],
-    NEXT_PUBLIC_APP_URL: process.env['NEXT_PUBLIC_APP_URL'],
-    NEXT_PUBLIC_REFRESH_COOKIE_NAME: process.env['NEXT_PUBLIC_REFRESH_COOKIE_NAME'],
+    NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_REFRESH_COOKIE_NAME: process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME,
   });
   if (!result.success) {
     const issues = result.error.issues
@@ -38,7 +38,7 @@ const parseClient = (): z.infer<typeof clientSchema> => {
 };
 
 const parseServer = (): z.infer<typeof serverSchema> => {
-  return serverSchema.parse({ NODE_ENV: process.env['NODE_ENV'] });
+  return serverSchema.parse({ NODE_ENV: process.env.NODE_ENV });
 };
 
 export const clientEnv = parseClient();

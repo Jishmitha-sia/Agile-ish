@@ -1,6 +1,6 @@
+import { cn } from '@agile-ish/ui';
 import { forwardRef, type InputHTMLAttributes } from 'react';
 
-import { cn } from '@agile-ish/ui';
 
 export type InputProps = InputHTMLAttributes<HTMLInputElement>;
 

@@ -2,10 +2,11 @@ import { createHash, randomBytes } from 'node:crypto';
 
 import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import type { UserId } from '@agile-ish/contracts';
 import { importPKCS8, importSPKI, jwtVerify, SignJWT, type JWTPayload, type KeyLike } from 'jose';
 
 import { getAppConfig } from '../../../config/config.module.js';
+
+import type { UserId } from '@agile-ish/contracts';
 
 /**
  * Asymmetric (RS256) access-token issuance and verification.

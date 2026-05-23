@@ -44,7 +44,7 @@ export const toApiError = async (res: Response): Promise<ApiError> => {
   return new ApiError(res.status, {
     code: 'INTERNAL_ERROR',
     message: typeof parsed === 'object' && parsed && 'message' in parsed
-      ? String((parsed as { message: unknown }).message)
+      ? String((parsed).message)
       : `HTTP ${res.status}`,
   });
 };

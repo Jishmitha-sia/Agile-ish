@@ -1,8 +1,9 @@
-import type { SessionResponse } from '@agile-ish/contracts';
 
 import { clientEnv } from '../env.js';
 
 import { toApiError } from './api-error.js';
+
+import type { SessionResponse } from '@agile-ish/contracts';
 
 /**
  * Fetch wrapper with automatic refresh-token rotation.
@@ -76,10 +77,10 @@ export class ApiClient {
 
   private async fetch(path: string, opts: RequestOptions): Promise<Response> {
     const url = `${this.baseUrl}${path}`;
-    const skipRefresh = opts.skipAuthRefresh || AUTH_PATHS.has(path);
+    const skipRefresh = (opts.skipAuthRefresh ?? false) || AUTH_PATHS.has(path);
     const exec = (): Promise<Response> => this.rawFetch(url, opts);
 
-    let res = await exec();
+    const res = await exec();
     if (res.status !== 401 || skipRefresh) return res;
 
     const refreshed = await this.ensureRefreshed();
@@ -98,7 +99,7 @@ export class ApiClient {
     if (hasBody && !headers.has('Content-Type')) {
       headers.set('Content-Type', 'application/json');
     }
-    return fetch(url, {
+    return await fetch(url, {
       ...opts,
       headers,
       credentials: 'include', // carries the refresh cookie cross-request
@@ -112,7 +113,7 @@ export class ApiClient {
    * (caller should let the 401 propagate).
    */
   private async ensureRefreshed(): Promise<boolean> {
-    if (this.refreshInFlight) return this.refreshInFlight;
+    if (this.refreshInFlight) return await this.refreshInFlight;
 
     this.refreshInFlight = (async (): Promise<boolean> => {
       try {
@@ -135,7 +136,7 @@ export class ApiClient {
       }
     })();
 
-    return this.refreshInFlight;
+    return await this.refreshInFlight;
   }
 }
 

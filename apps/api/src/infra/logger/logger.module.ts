@@ -2,8 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LoggerModule as PinoLoggerModule } from 'nestjs-pino';
 
-import { getAppConfig } from '../../config/config.module.js';
 import { REQUEST_ID_HEADER } from '../../common/interceptors/request-id.interceptor.js';
+import { getAppConfig } from '../../config/config.module.js';
 
 /**
  * Structured logging via pino. Every request gets a child logger bound to

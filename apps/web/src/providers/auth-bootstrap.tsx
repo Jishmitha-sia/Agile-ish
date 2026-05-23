@@ -1,11 +1,12 @@
 'use client';
 
-import type { SessionResponse } from '@agile-ish/contracts';
 import { useEffect, useRef, type ReactNode } from 'react';
 
-import { ApiError } from '../lib/api-error.js';
 import { createApiClient } from '../lib/api-client.js';
+import { ApiError } from '../lib/api-error.js';
 import { useAuthStore } from '../stores/auth.store.js';
+
+import type { SessionResponse } from '@agile-ish/contracts';
 
 /**
  * Initialises the API client + attempts a single /auth/refresh on first
@@ -41,7 +42,7 @@ export const AuthBootstrap = ({ children }: { children: ReactNode }) => {
     if (bootstrapped.current) return;
     bootstrapped.current = true;
 
-    const apiBase = process.env['NEXT_PUBLIC_API_BASE_URL'] ?? '';
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? '';
     void (async () => {
       try {
         const res = await fetch(`${apiBase}/auth/refresh`, {

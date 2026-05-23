@@ -12,16 +12,18 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { ApiCookieAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
-import type { CookieOptions, Response } from 'express';
+
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Public } from '../../common/decorators/public.decorator.js';
-import type { AuthenticatedRequest, RequestUser } from '../../common/types/auth.types.js';
 import { getAppConfig } from '../../config/config.module.js';
 
 import { AuthService } from './auth.service.js';
 import { LoginDto, SessionResponseDto, SignupDto } from './dto/auth.dto.js';
 import { JwtAuthGuard } from './guards/jwt-auth.guard.js';
+
+import type { AuthenticatedRequest, RequestUser } from '../../common/types/auth.types.js';
+import type { CookieOptions, Response } from 'express';
 
 /**
  * Auth HTTP surface.
@@ -58,7 +60,7 @@ export class AuthController {
   ): Promise<SessionResponseDto> {
     const { session, refreshSecret } = await this.auth.signup(body, this.flowContext(req));
     this.setRefreshCookie(res, refreshSecret);
-    return session as SessionResponseDto;
+    return session;
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -76,7 +78,7 @@ export class AuthController {
   ): Promise<SessionResponseDto> {
     const { session, refreshSecret } = await this.auth.login(body, this.flowContext(req));
     this.setRefreshCookie(res, refreshSecret);
-    return session as SessionResponseDto;
+    return session;
   }
 
   // ──────────────────────────────────────────────────────────────────────
@@ -103,7 +105,7 @@ export class AuthController {
     try {
       const { session, refreshSecret } = await this.auth.refresh(presented, this.flowContext(req));
       this.setRefreshCookie(res, refreshSecret);
-      return session as SessionResponseDto;
+      return session;
     } catch (err) {
       // On any refresh failure, clear the cookie so the client doesn't
       // keep retrying with a known-bad value.
@@ -137,7 +139,7 @@ export class AuthController {
   @Post('me')
   @HttpCode(HttpStatus.OK)
   async me(@CurrentUser() user: RequestUser) {
-    return this.auth.loadCurrentUser(user.id);
+    return await this.auth.loadCurrentUser(user.id);
   }
 
   // ─── helpers ─────────────────────────────────────────────────────────

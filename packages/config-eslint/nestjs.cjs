@@ -1,7 +1,8 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   root: true,
-  extends: ['@agile-ish/config-eslint/base.cjs'],
+  // Sibling file — relative path avoids pnpm symlink resolution quirks.
+  extends: [require.resolve('./base.cjs')],
   parserOptions: {
     project: ['./tsconfig.json'],
     tsconfigRootDir: __dirname,

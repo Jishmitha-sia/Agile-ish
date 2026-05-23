@@ -1,10 +1,13 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+// Auth pages read cookies + useSearchParams — no point prerendering.
+export const dynamic = 'force-dynamic';
+
 import { LoginRequest } from '@agile-ish/contracts';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -19,6 +22,16 @@ import { useAuthStore } from '../../../stores/auth.store.js';
 import type { LoginRequest as LoginRequestType } from '@agile-ish/contracts';
 
 export default function LoginPage() {
+  // `useSearchParams` must be wrapped in <Suspense> at the page boundary for
+  // the build's prerender pass — otherwise Next bails out with an error.
+  return (
+    <Suspense fallback={<div className="h-64" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') ?? '/';

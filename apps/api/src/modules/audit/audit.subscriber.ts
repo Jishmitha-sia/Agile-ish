@@ -1,8 +1,11 @@
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 
+
 import { EventBus, type SerialisedDomainEvent } from '../../infra/events/events.module.js';
 
 import { AuditService } from './audit.service.js';
+
+import type { AuditAction } from '@agile-ish/contracts';
 
 /**
  * Bridges domain events to the audit log.
@@ -18,7 +21,7 @@ import { AuditService } from './audit.service.js';
  * the calling service forgot to do it explicitly.
  */
 type AuditMapper = (e: SerialisedDomainEvent) => {
-  action: import('@agile-ish/contracts').AuditAction;
+  action: AuditAction;
   targetType?: string;
   targetId?: string;
   metadata?: Record<string, unknown>;
@@ -28,75 +31,75 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
   'auth.user.signed-up': (e) => ({
     action: 'auth.signup',
     targetType: 'user',
-    targetId: e.payload['userId'] as string,
-    metadata: { email: e.payload['email'] },
+    targetId: e.payload.userId as string,
+    metadata: { email: e.payload.email },
   }),
   'auth.user.logged-in': (e) => ({
     action: 'auth.login',
     targetType: 'user',
-    targetId: e.payload['userId'] as string,
-    metadata: { sessionId: e.payload['sessionId'] },
+    targetId: e.payload.userId as string,
+    metadata: { sessionId: e.payload.sessionId },
   }),
   'auth.user.logged-out': (e) => ({
     action: 'auth.logout',
     targetType: 'user',
-    targetId: e.payload['userId'] as string,
-    metadata: { sessionId: e.payload['sessionId'] },
+    targetId: e.payload.userId as string,
+    metadata: { sessionId: e.payload.sessionId },
   }),
   'auth.login.failed': (e) => ({
     action: 'auth.login.failed',
-    metadata: { email: e.payload['email'], reason: e.payload['reason'] },
+    metadata: { email: e.payload.email, reason: e.payload.reason },
   }),
   'auth.refresh.reused': (e) => ({
     action: 'auth.refresh.reused',
     targetType: 'user',
-    targetId: e.payload['userId'] as string,
-    metadata: { familyId: e.payload['familyId'] },
+    targetId: e.payload.userId as string,
+    metadata: { familyId: e.payload.familyId },
   }),
 
   'workspace.created': (e) => ({
     action: 'workspace.created',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
-    metadata: { slug: e.payload['slug'], name: e.payload['name'] },
+    targetId: e.payload.workspaceId as string,
+    metadata: { slug: e.payload.slug, name: e.payload.name },
   }),
   'workspace.updated': (e) => ({
     action: 'workspace.updated',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
-    metadata: { changes: e.payload['changes'] },
+    targetId: e.payload.workspaceId as string,
+    metadata: { changes: e.payload.changes },
   }),
   'workspace.deleted': (e) => ({
     action: 'workspace.deleted',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
+    targetId: e.payload.workspaceId as string,
   }),
   'workspace.member.invited': (e) => ({
     action: 'workspace.member.invited',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
-    metadata: { invitedEmail: e.payload['email'], role: e.payload['role'] },
+    targetId: e.payload.workspaceId as string,
+    metadata: { invitedEmail: e.payload.email, role: e.payload.role },
   }),
   'workspace.member.joined': (e) => ({
     action: 'workspace.member.joined',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
-    metadata: { userId: e.payload['userId'], role: e.payload['role'] },
+    targetId: e.payload.workspaceId as string,
+    metadata: { userId: e.payload.userId, role: e.payload.role },
   }),
   'workspace.member.removed': (e) => ({
     action: 'workspace.member.removed',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
-    metadata: { userId: e.payload['userId'] },
+    targetId: e.payload.workspaceId as string,
+    metadata: { userId: e.payload.userId },
   }),
   'workspace.member.role_changed': (e) => ({
     action: 'workspace.member.role_changed',
     targetType: 'workspace',
-    targetId: e.payload['workspaceId'] as string,
+    targetId: e.payload.workspaceId as string,
     metadata: {
-      userId: e.payload['userId'],
-      fromRole: e.payload['fromRole'],
-      toRole: e.payload['toRole'],
+      userId: e.payload.userId,
+      fromRole: e.payload.fromRole,
+      toRole: e.payload.toRole,
     },
   }),
 };
@@ -104,7 +107,7 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
 @Injectable()
 export class AuditSubscriber implements OnApplicationBootstrap {
   private readonly logger = new Logger(AuditSubscriber.name);
-  private unsubscribers: Array<() => void> = [];
+  private unsubscribers: (() => void)[] = [];
 
   constructor(
     private readonly events: EventBus,

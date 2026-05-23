@@ -1,19 +1,17 @@
 import { randomUUID } from 'node:crypto';
 
 import {
+  type AuthenticatedUser,
+  type SessionResponse,
+  type UserId,
+  type WorkspaceId,
+} from '@agile-ish/contracts';
+import {
   ConflictException,
   Injectable,
   Logger,
   UnauthorizedException,
 } from '@nestjs/common';
-import {
-  type AuthenticatedUser,
-  type SessionResponse,
-  type UserId,
-  type WorkspaceId,
-  type WorkspaceRole,
-} from '@agile-ish/contracts';
-
 import { RefreshTokenRevocationReason } from '@prisma/client';
 
 import { EventBus } from '../../infra/events/events.module.js';
@@ -124,7 +122,7 @@ export class AuthService {
       }),
     );
 
-    return this.issueSession(user.id, ctx);
+    return await this.issueSession(user.id, ctx);
   }
 
   async login(
@@ -133,7 +131,7 @@ export class AuthService {
   ): Promise<SignupOrLoginResult> {
     const user = await this.prisma.user.findUnique({ where: { email: input.email } });
 
-    if (!user || !user.passwordHash) {
+    if (!user?.passwordHash) {
       await this.events.publish(
         new LoginFailedEvent({
           email: input.email,
@@ -175,7 +173,7 @@ export class AuthService {
     }
 
     await this.prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
-    return this.issueSession(user.id, ctx);
+    return await this.issueSession(user.id, ctx);
   }
 
   async refresh(
@@ -208,7 +206,7 @@ export class AuthService {
       });
     }
 
-    return this.assembleSession(result.userId, result.result.secret.raw, result.result.tokenId);
+    return await this.assembleSession(result.userId, result.result.secret.raw, result.result.tokenId);
   }
 
   async logout(refreshRaw: string | undefined, userId: string): Promise<void> {
@@ -248,7 +246,7 @@ export class AuthService {
       memberships: user.memberships.map((m) => ({
         workspaceId: m.workspaceId as WorkspaceId,
         workspaceSlug: m.workspace.slug,
-        role: m.role as WorkspaceRole,
+        role: m.role,
       })),
     };
   }
@@ -297,7 +295,7 @@ export class AuthService {
   }
 
   private deriveSlug(displayName: string, email: string): string {
-    const candidate = (displayName || email.split('@')[0] || 'workspace')
+    const candidate = (displayName || (email.split('@')[0] ?? 'workspace'))
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '')

@@ -130,7 +130,7 @@ export class EventBus implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private async dispatchExternal(channel: string, raw: string): Promise<void> {
+  private dispatchExternal(channel: string, raw: string): void {
     const eventName = channel.slice(this.channelPrefix.length);
     let parsed: SerialisedDomainEvent & { __originInstance?: string };
     try {

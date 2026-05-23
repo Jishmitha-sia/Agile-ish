@@ -1,5 +1,6 @@
-import type { AuthenticatedUser, SessionResponse } from '@agile-ish/contracts';
 import { create } from 'zustand';
+
+import type { AuthenticatedUser, SessionResponse } from '@agile-ish/contracts';
 
 /**
  * Auth store — in-memory only.

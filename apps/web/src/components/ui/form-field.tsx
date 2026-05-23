@@ -1,6 +1,6 @@
+import { cn } from '@agile-ish/ui';
 import { cloneElement, type ReactElement, type ReactNode } from 'react';
 
-import { cn } from '@agile-ish/ui';
 
 import { Label } from './label.js';
 
@@ -15,14 +15,16 @@ import { Label } from './label.js';
 interface FormFieldProps {
   id: string;
   label: string;
-  helperText?: string;
-  error?: string;
+  // Explicit `| undefined` so callers can pass `error={errors.x?.message}`
+  // directly (which is `string | undefined`) under exactOptionalPropertyTypes.
+  helperText?: string | undefined;
+  error?: string | undefined;
   children: ReactElement<{
     id?: string;
     'aria-describedby'?: string;
     'aria-invalid'?: boolean;
   }>;
-  className?: string;
+  className?: string | undefined;
 }
 
 export const FormField = ({ id, label, helperText, error, children, className }: FormFieldProps) => {
@@ -30,11 +32,12 @@ export const FormField = ({ id, label, helperText, error, children, className }:
   if (error) describedBy.push(`${id}-error`);
   else if (helperText) describedBy.push(`${id}-helper`);
 
-  const cloned = cloneElement(children, {
-    id,
-    'aria-invalid': error ? true : undefined,
-    'aria-describedby': describedBy.length ? describedBy.join(' ') : undefined,
-  });
+  // Build props conditionally — `exactOptionalPropertyTypes` rejects passing
+  // `undefined` explicitly to optional props; we omit the key instead.
+  const childProps: { id: string; 'aria-invalid'?: boolean; 'aria-describedby'?: string } = { id };
+  if (error) childProps['aria-invalid'] = true;
+  if (describedBy.length) childProps['aria-describedby'] = describedBy.join(' ');
+  const cloned = cloneElement(children, childProps);
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>

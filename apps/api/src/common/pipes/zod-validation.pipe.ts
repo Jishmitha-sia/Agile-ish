@@ -31,7 +31,7 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T> {
   }
 }
 
-const serialiseZodIssues = (error: ZodError): Array<{ path: Array<string | number>; message: string; code: string }> =>
+const serialiseZodIssues = (error: ZodError): { path: (string | number)[]; message: string; code: string }[] =>
   error.issues.map((issue) => ({
     path: [...issue.path],
     message: issue.message,

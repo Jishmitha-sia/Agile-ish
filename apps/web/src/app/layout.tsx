@@ -1,10 +1,12 @@
 import './globals.css';
 
-import type { Metadata, Viewport } from 'next';
 import { Inter, JetBrains_Mono } from 'next/font/google';
-import type { ReactNode } from 'react';
 
 import { RootProvider } from '../providers/root-provider.js';
+
+import type { Metadata, Viewport } from 'next';
+import type { ReactNode } from 'react';
+
 
 const sans = Inter({
   subsets: ['latin'],

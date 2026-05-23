@@ -1,12 +1,13 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
-import type { UserId } from '@agile-ish/contracts';
-import type { Request } from 'express';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { getAppConfig } from '../../../config/config.module.js';
+
 import type { RequestUser } from '../../../common/types/auth.types.js';
+import type { UserId } from '@agile-ish/contracts';
+import type { Request } from 'express';
 
 interface RawJwtPayload {
   sub: string;

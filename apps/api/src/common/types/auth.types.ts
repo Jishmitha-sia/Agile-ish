@@ -1,5 +1,5 @@
-import type { Request } from 'express';
 import type { UserId, WorkspaceId, WorkspaceRole } from '@agile-ish/contracts';
+import type { Request } from 'express';
 
 /**
  * The authenticated principal attached to `req.user` by the JWT strategy.

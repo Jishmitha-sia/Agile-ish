@@ -1,10 +1,4 @@
 import {
-  ConflictException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import {
   type CreateWorkspaceRequest,
   type UpdateWorkspaceRequest,
   type UserId,
@@ -12,6 +6,12 @@ import {
   type WorkspaceId,
   type WorkspaceSlug,
 } from '@agile-ish/contracts';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 import { EventBus } from '../../infra/events/events.module.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
@@ -86,7 +86,7 @@ export class WorkspacesService {
       new WorkspaceUpdatedEvent({
         workspaceId,
         actorId,
-        changes: patch as Record<string, unknown>,
+        changes: patch,
       }),
     );
     return this.toDto(updated);
@@ -132,7 +132,7 @@ export class WorkspacesService {
   }): Workspace {
     return {
       id: ws.id as WorkspaceId,
-      slug: ws.slug as WorkspaceSlug,
+      slug: ws.slug,
       name: ws.name,
       description: ws.description,
       avatarUrl: ws.avatarUrl,

@@ -77,7 +77,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     ctx: RequestContext,
     fn: (tx: Prisma.TransactionClient) => Promise<T>,
   ): Promise<T> {
-    return this.$transaction(async (tx) => {
+    return await this.$transaction(async (tx) => {
       if (ctx.userId) {
         await tx.$executeRawUnsafe(`SET LOCAL app.user_id = '${escapeSqlIdent(ctx.userId)}'`);
       }
@@ -86,7 +86,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
           `SET LOCAL app.workspace_id = '${escapeSqlIdent(ctx.workspaceId)}'`,
         );
       }
-      return fn(tx);
+      return await fn(tx);
     });
   }
 }

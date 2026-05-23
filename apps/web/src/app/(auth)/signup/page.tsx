@@ -1,7 +1,9 @@
 'use client';
 
-import { zodResolver } from '@hookform/resolvers/zod';
+export const dynamic = 'force-dynamic';
+
 import { SignupRequest } from '@agile-ish/contracts';
+import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';

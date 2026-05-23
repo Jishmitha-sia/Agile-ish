@@ -1,7 +1,7 @@
 /** @type {import("eslint").Linter.Config} */
 module.exports = {
   root: true,
-  extends: ['@agile-ish/config-eslint/base.cjs', 'next/core-web-vitals'],
+  extends: [require.resolve('./base.cjs'), 'next/core-web-vitals'],
   parserOptions: {
     project: ['./tsconfig.json'],
     tsconfigRootDir: __dirname,
@@ -12,6 +12,12 @@ module.exports = {
     'import/no-default-export': 'off',
     // React 19 doesn't need React in scope.
     'react/react-in-jsx-scope': 'off',
+    // Allow async functions as JSX attributes (onSubmit, onClick, …) — the
+    // idiomatic React pattern. Still flag misuse outside JSX.
+    '@typescript-eslint/no-misused-promises': [
+      'error',
+      { checksVoidReturn: { attributes: false } },
+    ],
   },
   ignorePatterns: ['.next', 'node_modules', 'next-env.d.ts'],
 };

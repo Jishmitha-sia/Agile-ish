@@ -1,3 +1,4 @@
+import { type UserId } from '@agile-ish/contracts';
 import {
   Body,
   Controller,
@@ -11,10 +12,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { type UserId } from '@agile-ish/contracts';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-import type { RequestUser } from '../../common/types/auth.types.js';
+
 
 import { CurrentWorkspace } from './decorators/current-workspace.decorator.js';
 import { RequireRole } from './decorators/require-role.decorator.js';
@@ -27,7 +27,8 @@ import {
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard.js';
 import { WorkspaceMembersService } from './services/workspace-members.service.js';
 import { WorkspacesService } from './workspaces.service.js';
-import type { RequestWorkspaceContext } from '../../common/types/auth.types.js';
+
+import type { RequestUser , RequestWorkspaceContext } from '../../common/types/auth.types.js';
 
 @ApiTags('workspaces')
 @ApiBearerAuth()
@@ -44,14 +45,14 @@ export class WorkspacesController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a new workspace owned by the current user' })
   async create(@CurrentUser() user: RequestUser, @Body() body: CreateWorkspaceDto) {
-    return this.workspaces.create(user.id, body);
+    return await this.workspaces.create(user.id, body);
   }
 
   @UseGuards(WorkspaceRoleGuard)
   @Get(':workspaceSlug')
   @ApiOperation({ summary: 'Get a workspace by slug (must be a member)' })
   async getOne(@CurrentWorkspace() ws: RequestWorkspaceContext) {
-    return this.workspaces.getBySlug(ws.slug as never);
+    return await this.workspaces.getBySlug(ws.slug);
   }
 
   @UseGuards(WorkspaceRoleGuard)
@@ -63,7 +64,7 @@ export class WorkspacesController {
     @CurrentWorkspace() ws: RequestWorkspaceContext,
     @Body() body: UpdateWorkspaceDto,
   ) {
-    return this.workspaces.update(user.id, ws.id, body);
+    return await this.workspaces.update(user.id, ws.id, body);
   }
 
   @UseGuards(WorkspaceRoleGuard)
@@ -84,7 +85,7 @@ export class WorkspacesController {
   @Get(':workspaceSlug/members')
   @ApiOperation({ summary: 'List members of a workspace' })
   async listMembers(@CurrentWorkspace() ws: RequestWorkspaceContext) {
-    return this.members.list(ws.id);
+    return await this.members.list(ws.id);
   }
 
   @UseGuards(WorkspaceRoleGuard)
@@ -97,7 +98,7 @@ export class WorkspacesController {
     @CurrentWorkspace() ws: RequestWorkspaceContext,
     @Body() body: InviteMemberDto,
   ) {
-    return this.members.invite(user.id, ws.id, body);
+    return await this.members.invite(user.id, ws.id, body);
   }
 
   @UseGuards(WorkspaceRoleGuard)

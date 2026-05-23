@@ -1,9 +1,9 @@
 import { Injectable, type CallHandler, type ExecutionContext, type NestInterceptor } from '@nestjs/common';
-import type { Response } from 'express';
 import { v7 as uuidV7 } from 'uuid';
-import type { Observable } from 'rxjs';
 
 import type { AuthenticatedRequest } from '../types/auth.types.js';
+import type { Response } from 'express';
+import type { Observable } from 'rxjs';
 
 /**
  * Attach a per-request id (UUIDv7 — sortable, time-based) so logs, traces,
