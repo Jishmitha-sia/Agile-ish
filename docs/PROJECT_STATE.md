@@ -17,7 +17,7 @@
 - **Goal:** Open-source, AI-native Scrum collaboration platform. Modular monolith built for self-hosting first, horizontal scale second.
 - **Inspired by:** Plane, Linear, Jira, OpenProject.
 - **License:** AGPL-3.0-or-later (same posture as Plane / Mattermost / PostHog).
-- **Repository:** `c:\Users\hello\Documents\touchgrass\scrum-collab` (local, no remote pushed yet).
+- **Repository:** `c:\Users\hello\Documents\touchgrass\scrum-collab` (local) · remote: <https://github.com/Jishmitha-sia/Agile-ish>
 - **User:** `hello@spacemarvel.ai` (Windows, PowerShell, VS Code).
 - **Intended use:** Personal portfolio + tool for the user's team. Will be deployed to free-tier managed services or a cheap VPS.
 
@@ -163,17 +163,16 @@ agile-ish/
 
 ## 6. Commit History (Phase 1)
 
-All commits below are local — **nothing has been pushed to a remote yet**. There is no GitHub repo yet.
+Pushed to <https://github.com/Jishmitha-sia/Agile-ish> on 2026-05-23. First commit's `Co-Authored-By: Claude` footer was stripped via `git filter-branch --msg-filter` before the initial push (cleaner portfolio history). All SHAs below are the post-rewrite values.
 
 ```
-414169d feat(phase-1): docker-compose, dockerfiles, ci/cd, verification recipe   ← Batch 5
-d7b779a feat(phase-1): next.js 15 web app — auth pages, api client, providers    ← Batch 4
-0b30832 feat(phase-1): auth, users, workspaces, and audit modules                ← Batch 3
-416dcec chore: add .gitattributes to normalize line endings to LF
-4cbc25f feat(phase-1): scaffold monorepo, contracts, Prisma schema, and API infra ← Batches 1+2
+56ec031 fix(phase-1): resolve install + RLS + Windows + Prisma + Next.js bugs   ← verification fixes
+c860d99 feat(phase-1): docker-compose, dockerfiles, ci/cd, verification recipe   ← Batch 5
+bf4db46 feat(phase-1): next.js 15 web app — auth pages, api client, providers    ← Batch 4
+f2b4b31 feat(phase-1): auth, users, workspaces, and audit modules                ← Batch 3
+09c83a2 chore: add .gitattributes to normalize line endings to LF
+0ec59ec feat(phase-1): scaffold monorepo, contracts, Prisma schema, and API infra ← Batches 1+2
 ```
-
-> **Note:** The first commit (`4cbc25f`) contains a `Co-Authored-By: Claude Opus 4.7` footer. User has since requested NO Co-Authored-By footers on future commits. The first commit can be amended on request, but should not be force-amended unilaterally.
 
 ### Uncommitted work in the working tree (as of this writing)
 
@@ -375,6 +374,7 @@ docker compose -f infra/docker/docker-compose.yml --env-file .env ps
 | 2026-05-23 | Claude Opus 4.7 | Initial creation. Phase 1 status: 5/5 batches committed, mid-verification blocked on RLS fix. |
 | 2026-05-23 | Claude Opus 4.7 | RLS bug resolved via SECURITY DEFINER helpers (policy recursion was the secondary issue). `pnpm db:seed` succeeds. Demo user + workspace + OWNER row populated in DB. Next: `pnpm dev` in user's terminal + browser smoke test. |
 | 2026-05-23 | Claude Opus 4.7 | **Phase 1 fully verified end-to-end.** Browser login works; audit log populates cleanly (exactly 1 row per event after EventBus dedupe fix). All blockers in Section 9 resolved. Phase 1 done; Phase 2 ready to start. |
+| 2026-05-23 | Claude Opus 4.7 | Pushed to GitHub: <https://github.com/Jishmitha-sia/Agile-ish>. Cleaned Co-Authored-By footer from first commit via filter-branch before initial push. Added `passWithNoTests: true` to vitest configs so CI passes until tests land in Phase 1.5. |
 
 ---
 

@@ -12,6 +12,8 @@ export default defineConfig({
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', '**/*.e2e-spec.ts'],
     reporters: ['default'],
+    // Tests land in Phase 1.5 — until then the suite is empty and CI should pass.
+    passWithNoTests: true,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],

@@ -15,5 +15,7 @@ export default defineConfig({
     sequence: { concurrent: false },
     testTimeout: 30_000,
     hookTimeout: 30_000,
+    // E2E suite is empty until Phase 1.5; CI should pass until then.
+    passWithNoTests: true,
   },
 });
