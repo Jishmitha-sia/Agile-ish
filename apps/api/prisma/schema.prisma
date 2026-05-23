@@ -55,6 +55,11 @@ enum EmailTokenKind {
   PASSWORD_RESET
 }
 
+enum OAuthProvider {
+  GOOGLE
+  GITHUB
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // User
 // ─────────────────────────────────────────────────────────────────────────────
@@ -80,6 +85,7 @@ model User {
   memberships     WorkspaceMember[]
   refreshTokens   RefreshToken[]
   emailTokens     EmailToken[]
+  oauthAccounts   OAuthAccount[]
   ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
   auditLogs       AuditLog[]        @relation("AuditActor")
   invitesSent     WorkspaceMember[] @relation("InvitedBy")
@@ -165,6 +171,41 @@ model EmailToken {
   @@index([userId, kind])
   @@index([expiresAt])
   @@map("email_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OAuthAccount — links a User to a provider identity (Google, GitHub, …).
+//
+// `(provider, providerUserId)` is unique — that's the provider's stable id
+// for this account. We also store the access / refresh / expiry triple so
+// background jobs can call the provider's API on the user's behalf later
+// (e.g. for Phase 6 GitHub integration). Tokens are stored as plain text
+// for now — in Phase 2+ we'll wrap them with `pgcrypto` if/when scope of
+// access tokens grows beyond identity.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model OAuthAccount {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       OAuthProvider
+  providerUserId String        @db.VarChar(255)
+  // Profile snapshot at link time — useful for showing "linked as @x on
+  // GitHub" without an extra round-trip.
+  providerEmail  String?       @db.VarChar(255)
+  providerHandle String?       @db.VarChar(255)
+  // Tokens — optional. Stored only if we'll use them later (most flows
+  // need only identity confirmation, after which the token is discarded).
+  accessToken    String?       @db.Text
+  refreshToken   String?       @db.Text
+  expiresAt      DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, providerUserId])
+  @@index([userId])
+  @@map("oauth_accounts")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

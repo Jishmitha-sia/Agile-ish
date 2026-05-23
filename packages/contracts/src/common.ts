@@ -92,6 +92,10 @@ export const AuditAction = z.enum([
   'auth.email.verified',
   'auth.password.reset_requested',
   'auth.password.reset_completed',
+  // Phase 1.5 — OAuth
+  'auth.oauth.signin',
+  'auth.oauth.signup',
+  'auth.oauth.linked',
   // Workspaces
   'workspace.created',
   'workspace.updated',

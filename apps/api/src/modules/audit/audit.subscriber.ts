@@ -82,6 +82,26 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
     targetId: e.payload.userId as string,
   }),
 
+  // ─── OAuth ───
+  'auth.oauth.signin': (e) => ({
+    action: 'auth.oauth.signin',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { provider: e.payload.provider },
+  }),
+  'auth.oauth.signup': (e) => ({
+    action: 'auth.oauth.signup',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { provider: e.payload.provider, email: e.payload.email },
+  }),
+  'auth.oauth.linked': (e) => ({
+    action: 'auth.oauth.linked',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { provider: e.payload.provider },
+  }),
+
   'workspace.created': (e) => ({
     action: 'workspace.created',
     targetType: 'workspace',

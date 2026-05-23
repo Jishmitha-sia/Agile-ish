@@ -138,3 +138,16 @@ export const ConfirmPasswordResetRequest = z.object({
   newPassword: PasswordSchema,
 });
 export type ConfirmPasswordResetRequest = z.infer<typeof ConfirmPasswordResetRequest>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OAuth (Phase 1.5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const OAuthProvider = z.enum(['google', 'github']);
+export type OAuthProvider = z.infer<typeof OAuthProvider>;
+
+/** GET /auth/oauth/providers — which OAuth providers are configured. */
+export const OAuthProvidersResponse = z.object({
+  providers: z.array(OAuthProvider),
+});
+export type OAuthProvidersResponse = z.infer<typeof OAuthProvidersResponse>;

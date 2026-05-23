@@ -99,6 +99,14 @@ export const envSchema = z
     VECTOR_BACKEND: z.enum(['pgvector', 'qdrant']).default('pgvector'),
     QDRANT_URL: z.string().url().default('http://localhost:6333'),
     QDRANT_API_KEY: z.string().default(''),
+
+    // ───── OAuth (Phase 1.5) — all optional. A provider is enabled only
+    //       when BOTH its client ID and secret are set. Leaving them blank
+    //       disables that provider without affecting the rest of the app.
+    GOOGLE_OAUTH_CLIENT_ID: z.string().default(''),
+    GOOGLE_OAUTH_CLIENT_SECRET: z.string().default(''),
+    GITHUB_OAUTH_CLIENT_ID: z.string().default(''),
+    GITHUB_OAUTH_CLIENT_SECRET: z.string().default(''),
   })
   .superRefine((env, ctx) => {
     // In production, refuse insecure cookie configuration.

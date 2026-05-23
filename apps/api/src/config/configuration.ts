@@ -82,6 +82,10 @@ export interface AppConfig {
     qdrantUrl: string;
     qdrantApiKey: string;
   };
+  oauth: {
+    google: { clientId: string; clientSecret: string; enabled: boolean };
+    github: { clientId: string; clientSecret: string; enabled: boolean };
+  };
 }
 
 const decodeBase64Pem = (base64: string): string => Buffer.from(base64, 'base64').toString('utf8');
@@ -157,5 +161,17 @@ export const buildAppConfig = (env: AppEnv): AppConfig => ({
     backend: env.VECTOR_BACKEND,
     qdrantUrl: env.QDRANT_URL,
     qdrantApiKey: env.QDRANT_API_KEY,
+  },
+  oauth: {
+    google: {
+      clientId: env.GOOGLE_OAUTH_CLIENT_ID,
+      clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
+      enabled: Boolean(env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET),
+    },
+    github: {
+      clientId: env.GITHUB_OAUTH_CLIENT_ID,
+      clientSecret: env.GITHUB_OAUTH_CLIENT_SECRET,
+      enabled: Boolean(env.GITHUB_OAUTH_CLIENT_ID && env.GITHUB_OAUTH_CLIENT_SECRET),
+    },
   },
 });

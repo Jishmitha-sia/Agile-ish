@@ -11,6 +11,7 @@ import { Suspense, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
+import { OAuthButtons } from '../../../components/auth/oauth-buttons.js';
 import { Button } from '../../../components/ui/button.js';
 import { FormField } from '../../../components/ui/form-field.js';
 import { Input } from '../../../components/ui/input.js';
@@ -54,6 +55,15 @@ function LoginForm() {
     if (status === 'authenticated') router.replace(next);
   }, [status, next, router]);
 
+  // Surface OAuth-callback errors (we land back here on auto-link refusal).
+  useEffect(() => {
+    if (searchParams.get('error') === 'oauth_email_collision') {
+      toast.error(
+        'An account already exists with that email. Sign in with your password to link this provider.',
+      );
+    }
+  }, [searchParams]);
+
   const onSubmit = handleSubmit(async (values) => {
     try {
       await login.mutateAsync(values);
@@ -86,6 +96,8 @@ function LoginForm() {
           Welcome back. Sign in to your workspace.
         </p>
       </div>
+
+      <OAuthButtons />
 
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormField id="email" label="Email" error={errors.email?.message}>
