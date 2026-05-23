@@ -57,6 +57,31 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
     metadata: { familyId: e.payload.familyId },
   }),
 
+  // ─── Phase 1.5 ───
+  'auth.email-verification.requested': (e) => ({
+    action: 'auth.email.verification_requested',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { email: e.payload.email },
+  }),
+  'auth.email-verification.confirmed': (e) => ({
+    action: 'auth.email.verified',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { email: e.payload.email },
+  }),
+  'auth.password-reset.requested': (e) => ({
+    action: 'auth.password.reset_requested',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+    metadata: { email: e.payload.email },
+  }),
+  'auth.password-reset.completed': (e) => ({
+    action: 'auth.password.reset_completed',
+    targetType: 'user',
+    targetId: e.payload.userId as string,
+  }),
+
   'workspace.created': (e) => ({
     action: 'workspace.created',
     targetType: 'workspace',

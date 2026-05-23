@@ -17,18 +17,28 @@ import { NextResponse, type NextRequest } from 'next/server';
  */
 const REFRESH_COOKIE = process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME ?? 'agile_rt';
 
+// Public routes that don't require a session. The first two are the
+// signup/login forms — already-logged-in users get bounced to `/`. The
+// reset / verify routes are reached via email links and must work for
+// logged-out users without a redirect bounce.
 const AUTH_ROUTES = ['/login', '/signup'];
+const PUBLIC_ROUTES = ['/forgot-password', '/reset-password', '/verify-email'];
 
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
   const hasRefresh = req.cookies.has(REFRESH_COOKIE);
   const isAuthRoute = AUTH_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+  const isPublicRoute = PUBLIC_ROUTES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
+  // Already-signed-in users on /login or /signup bounce to the app shell.
+  // We deliberately DON'T bounce them off /reset-password or /verify-email
+  // — they may legitimately need those flows even while logged in.
   if (isAuthRoute && hasRefresh) {
     return NextResponse.redirect(new URL('/', req.url));
   }
 
-  if (!isAuthRoute && !hasRefresh) {
+  // Anything that isn't an auth/public route requires a refresh cookie.
+  if (!isAuthRoute && !isPublicRoute && !hasRefresh) {
     const url = new URL('/login', req.url);
     if (pathname !== '/') url.searchParams.set('next', pathname);
     return NextResponse.redirect(url);

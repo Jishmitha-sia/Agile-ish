@@ -105,3 +105,36 @@ export const ChangePasswordRequest = z
     path: ['newPassword'],
   });
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequest>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Email verification (Phase 1.5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Request a verification email be (re)sent to the user. */
+export const RequestEmailVerificationRequest = z.object({
+  email: EmailSchema,
+});
+export type RequestEmailVerificationRequest = z.infer<typeof RequestEmailVerificationRequest>;
+
+/** Confirm a verification token from the email link. */
+export const ConfirmEmailVerificationRequest = z.object({
+  token: z.string().min(32).max(128),
+});
+export type ConfirmEmailVerificationRequest = z.infer<typeof ConfirmEmailVerificationRequest>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Password reset (Phase 1.5)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Initiate a password reset — sends an email with a reset link. */
+export const RequestPasswordResetRequest = z.object({
+  email: EmailSchema,
+});
+export type RequestPasswordResetRequest = z.infer<typeof RequestPasswordResetRequest>;
+
+/** Complete a password reset using the token from the email. */
+export const ConfirmPasswordResetRequest = z.object({
+  token: z.string().min(32).max(128),
+  newPassword: PasswordSchema,
+});
+export type ConfirmPasswordResetRequest = z.infer<typeof ConfirmPasswordResetRequest>;

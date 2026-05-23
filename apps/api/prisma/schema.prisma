@@ -46,6 +46,15 @@ enum RefreshTokenRevocationReason {
   EXPIRED
 }
 
+/// Discriminator for the unified EmailToken table — both email-verification
+/// and password-reset flows share the same single-use, time-limited token
+/// shape (SHA-256(token), expiry, usedAt) so we keep them in one model with
+/// a `kind` column instead of two near-identical tables.
+enum EmailTokenKind {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // User
 // ─────────────────────────────────────────────────────────────────────────────
@@ -70,6 +79,7 @@ model User {
   // Reverse relations
   memberships     WorkspaceMember[]
   refreshTokens   RefreshToken[]
+  emailTokens     EmailToken[]
   ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
   auditLogs       AuditLog[]        @relation("AuditActor")
   invitesSent     WorkspaceMember[] @relation("InvitedBy")
@@ -121,6 +131,40 @@ model RefreshToken {
   @@index([familyId])
   @@index([expiresAt])
   @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EmailToken — unified table for email-verification + password-reset.
+//
+// Each row is single-use (`usedAt` is set the first time the token is
+// successfully consumed) and time-limited (`expiresAt`). The actual token
+// value lives only in the link sent to the user's email; the DB stores
+// SHA-256(token) so a DB leak doesn't yield usable tokens.
+//
+// `kind` discriminates the two flows. Default TTLs (enforced at the
+// service layer, not the DB):
+//   EMAIL_VERIFICATION  → 24h
+//   PASSWORD_RESET      → 1h
+// ─────────────────────────────────────────────────────────────────────────────
+
+model EmailToken {
+  id        String         @id @default(cuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      EmailTokenKind
+  tokenHash String         @unique @db.Char(64) // sha256 hex
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  // Forensics — captured at request time, not at consumption time.
+  ipAddress String? @db.VarChar(64)
+  userAgent String? @db.VarChar(512)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, kind])
+  @@index([expiresAt])
+  @@map("email_tokens")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

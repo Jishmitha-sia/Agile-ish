@@ -107,6 +107,15 @@ function LoginForm() {
           />
         </FormField>
 
+        <div className="text-right">
+          <Link
+            href="/forgot-password"
+            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         <Button type="submit" className="w-full" disabled={isSubmitting || login.isPending}>
           {isSubmitting || login.isPending ? <Spinner /> : null}
           Log in
