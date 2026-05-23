@@ -57,3 +57,6 @@ infra/docker/data/
 # OpenTelemetry / temp
 *.heapsnapshot
 *.cpuprofile
+
+# Internal docs — kept locally as a working journal, not published
+docs/

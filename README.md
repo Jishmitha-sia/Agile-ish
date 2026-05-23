@@ -10,7 +10,7 @@ Open-source, AI-native Scrum collaboration platform. Modular monolith built for 
 - **Realtime:** Socket.IO (rooms, presence, notifications) + Yjs/Hocuspocus (CRDT docs, Phase 4+).
 - **AI:** Provider-agnostic via LangChain.js — Ollama by default, any OpenAI-compatible endpoint via env.
 - **Observability:** OpenTelemetry → Grafana stack (Tempo/Loki/Prometheus). Structured logs via pino.
-- **Auth:** Argon2id + asymmetric (RS256) JWT access tokens + httpOnly rotating refresh-token cookie with reuse detection. OIDC-shaped abstraction so Keycloak/Auth0 can replace it later.
+- **Auth:** Argon2id passwords + asymmetric (RS256) JWT access tokens + httpOnly rotating refresh-token cookie with reuse detection. Email verification, password reset, and OAuth sign-in (Google + GitHub) all flow through the same session machinery. OIDC-shaped abstraction so Keycloak/Auth0 can replace it later.
 
 ## Monorepo layout
 
@@ -41,7 +41,9 @@ agile-ish/
 ```powershell
 # 1. Configure env (one-time)
 Copy-Item .env.example .env
-# Generate JWT keypair — see docs/PHASE_1_VERIFY.md for the exact commands
+# .env.example documents every variable, including how to generate the RS256
+# JWT keypair (paste both keys inline with `\n` escape sequences) and which
+# OAuth env vars to fill if you want Google/GitHub buttons on the login page.
 
 # 2. Install + start infrastructure
 pnpm install
@@ -61,17 +63,16 @@ pnpm dev
 | MailHog (captured emails) | <http://localhost:8025> |
 | Adminer (DB GUI, optional) | <http://localhost:8080> — start with `--profile tools` |
 
-**Full Phase 1 verification recipe:** see [docs/PHASE_1_VERIFY.md](docs/PHASE_1_VERIFY.md) for the end-to-end smoke test (signup, RLS check, audit log query, refresh-token rotation).
-
 ## Phase plan
 
-1. **Foundation** — monorepo, auth, workspaces (current).
-2. **Workspaces & projects** — full CRUD, RBAC.
-3. **Scrum boards & issues** — drag-and-drop, sprints, optimistic UI.
-4. **Realtime collab** — Socket.IO presence, Yjs/Hocuspocus docs.
-5. **Analytics** — burndown, velocity, cycle time.
-6. **AI features** — sprint summaries, issue generation, semantic search.
-7. **Deployment & scaling** — Helm, multi-region, pgbouncer, HPA.
+1. **Foundation** — monorepo, auth, workspaces. ✅ shipped
+2. **Auth polish** — email verification + password reset, OAuth (Google + GitHub), active sessions UI, invitation tokens, integration tests. 🟡 in progress
+3. **Workspaces & projects** — full CRUD, RBAC.
+4. **Scrum boards & issues** — drag-and-drop, sprints, optimistic UI.
+5. **Realtime collab** — Socket.IO presence, Yjs/Hocuspocus docs.
+6. **Analytics** — burndown, velocity, cycle time.
+7. **AI features** — sprint summaries, issue generation, semantic search.
+8. **Deployment & scaling** — Helm, multi-region, pgbouncer, HPA.
 
 ## Engineering rules
 
