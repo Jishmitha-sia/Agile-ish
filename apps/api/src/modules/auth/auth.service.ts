@@ -227,9 +227,14 @@ export class AuthService {
       where: { id: userId },
       include: {
         memberships: {
+          // Suppress memberships of soft-deleted workspaces — the row stays
+          // in the DB for restoration tooling, but it should not appear in
+          // /auth/me's payload or in the sidebar switcher.
+          where: { workspace: { deletedAt: null } },
           include: {
-            workspace: { select: { id: true, slug: true } },
+            workspace: { select: { id: true, slug: true, name: true } },
           },
+          orderBy: { joinedAt: 'asc' },
         },
       },
     });
@@ -246,6 +251,7 @@ export class AuthService {
       memberships: user.memberships.map((m) => ({
         workspaceId: m.workspaceId as WorkspaceId,
         workspaceSlug: m.workspace.slug,
+        workspaceName: m.workspace.name,
         role: m.role,
       })),
     };

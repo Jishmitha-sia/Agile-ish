@@ -74,6 +74,15 @@ export class WorkspacesService {
     workspaceId: WorkspaceId,
     patch: UpdateWorkspaceRequest,
   ): Promise<Workspace> {
+    // Refuse to mutate a soft-deleted workspace — return 404 to match the
+    // outward-facing "this workspace doesn't exist" view that reads enforce.
+    const existing = await this.prisma.workspace.findFirst({
+      where: { id: workspaceId, deletedAt: null },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException({ code: 'NOT_FOUND', message: 'Workspace not found' });
+    }
     const updated = await this.prisma.workspace.update({
       where: { id: workspaceId },
       data: {
@@ -97,8 +106,19 @@ export class WorkspacesService {
    *
    * Hard-coded guard: only the OWNER can delete. The WorkspaceRoleGuard
    * already checks role≥ADMIN; we add this extra OWNER check here because
-   * deletion is irreversible (until restoration tooling lands) and we want
-   * a service-layer assertion regardless of how guards are configured.
+   * deletion has user-visible consequences (members lose access, the slug
+   * stays reserved) and we want a service-layer assertion regardless of
+   * how guards are configured.
+   *
+   * Stamps `deletedAt = now()` — the row stays in the DB so:
+   *   • the workspace_members rows are not cascade-deleted (FK was CASCADE
+   *     on hard delete; soft delete just leaves them alone),
+   *   • the audit_logs FK stays satisfied (otherwise the `workspace.deleted`
+   *     audit row's INSERT would race the workspace's hard removal),
+   *   • a future "restore within 30 days" flow has a row to flip back.
+   * Reads everywhere else filter by `deletedAt IS NULL` so a soft-deleted
+   * workspace stops appearing in `/auth/me`, `/users/me/memberships`,
+   * `/workspaces/:slug`, and `WorkspaceRoleGuard`'s membership lookup.
    */
   async deleteWorkspace(actorId: UserId, workspaceId: WorkspaceId): Promise<void> {
     const ws = await this.prisma.workspace.findUnique({ where: { id: workspaceId } });
@@ -117,7 +137,10 @@ export class WorkspacesService {
         message: 'Workspace is already deleted',
       });
     }
-    await this.prisma.workspace.delete({ where: { id: workspaceId } });
+    await this.prisma.workspace.update({
+      where: { id: workspaceId },
+      data: { deletedAt: new Date() },
+    });
     await this.events.publish(new WorkspaceDeletedEvent({ workspaceId, actorId }));
   }
 

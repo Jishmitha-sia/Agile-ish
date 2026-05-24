@@ -63,7 +63,8 @@ export const useCurrentUser = () => {
     queryKey: ['users', 'me'],
     enabled: status === 'authenticated',
     queryFn: async (): Promise<AuthenticatedUser> => {
-      return await getApiClient().get<AuthenticatedUser>('/auth/me');
+      // /auth/me is mounted as POST on the server — see auth.controller.ts.
+      return await getApiClient().post<AuthenticatedUser>('/auth/me');
     },
   });
 };

@@ -46,7 +46,9 @@ export class UsersService {
 
   async listMemberships(userId: UserId): Promise<WorkspaceMembership[]> {
     const rows = await this.prisma.workspaceMember.findMany({
-      where: { userId },
+      // Soft-deleted workspaces stay in workspace_members for restoration
+      // tooling but must not surface in user-facing membership lists.
+      where: { userId, workspace: { deletedAt: null } },
       include: { workspace: { select: { id: true, slug: true, name: true } } },
       orderBy: { joinedAt: 'asc' },
     });

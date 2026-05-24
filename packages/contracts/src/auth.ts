@@ -61,6 +61,7 @@ export const AuthenticatedUser = z.object({
     z.object({
       workspaceId: WorkspaceId,
       workspaceSlug: z.string(),
+      workspaceName: z.string(),
       role: WorkspaceRole,
     }),
   ),

@@ -1,53 +1,46 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
+import { Spinner } from '../../components/ui/spinner.js';
 import { useAuthStore } from '../../stores/auth.store.js';
 
 /**
- * Phase 1 landing page — confirms the auth flow is working end-to-end.
- * Phase 2 replaces this with the workspace dashboard (projects, sprints,
- * recent activity).
+ * Authenticated root — picks the right destination based on the user's
+ * memberships and redirects.
+ *
+ *   • Has a defaultWorkspaceId that resolves to a current membership
+ *     → /w/{thatSlug}
+ *   • Otherwise falls back to the first membership
+ *     → /w/{firstSlug}
+ *   • No memberships at all (shouldn't happen post-signup, but possible
+ *     if the user was removed from every workspace they were in)
+ *     → /workspaces/new
+ *
+ * Rendered only while we figure out where to send the user — the
+ * (app)/layout above us guarantees `status === 'authenticated'`.
  */
-export default function HomePage() {
+export default function HomeRedirect() {
   const user = useAuthStore((s) => s.user);
-  const memberships = user?.memberships ?? [];
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) return;
+    const memberships = user.memberships;
+    const target =
+      memberships.find((m) => m.workspaceId === user.defaultWorkspaceId) ??
+      memberships[0];
+    if (target) {
+      router.replace(`/w/${target.workspaceSlug}`);
+    } else {
+      router.replace('/workspaces/new');
+    }
+  }, [user, router]);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
-      <div className="space-y-2">
-        <h1 className="text-3xl font-semibold tracking-tight">
-          Welcome{user?.displayName ? `, ${user.displayName}` : ''}.
-        </h1>
-        <p className="text-muted-foreground">
-          You&apos;re signed in. The Phase-1 foundation is working — auth flow, refresh
-          rotation, RBAC, and audit logging are live.
-        </p>
-      </div>
-
-      <section className="space-y-3 rounded-lg border border-border bg-card p-6">
-        <h2 className="text-sm font-medium uppercase tracking-wide text-muted-foreground">
-          Your workspaces
-        </h2>
-        {memberships.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No workspaces yet.</p>
-        ) : (
-          <ul className="divide-y divide-border">
-            {memberships.map((m) => (
-              <li key={m.workspaceId} className="flex items-center justify-between py-2">
-                <span className="font-mono text-sm">{m.workspaceSlug}</span>
-                <span className="rounded-md bg-secondary px-2 py-0.5 text-xs text-secondary-foreground">
-                  {m.role}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section className="rounded-lg border border-dashed border-border bg-background/40 p-6 text-sm text-muted-foreground">
-        Phase 2 will add the workspace dashboard, projects, members management, and
-        the keyboard-first shell. This page exists so the Phase-1 deliverable is
-        end-to-end testable.
-      </section>
+    <div className="grid min-h-screen place-items-center">
+      <Spinner className="size-6 text-muted-foreground" />
     </div>
   );
 }
