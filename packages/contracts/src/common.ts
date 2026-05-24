@@ -104,6 +104,10 @@ export const AuditAction = z.enum([
   'workspace.member.joined',
   'workspace.member.removed',
   'workspace.member.role_changed',
+  // Projects
+  'project.created',
+  'project.updated',
+  'project.deleted',
 ]);
 export type AuditAction = z.infer<typeof AuditAction>;
 

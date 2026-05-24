@@ -147,6 +147,29 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
       toRole: e.payload.toRole,
     },
   }),
+
+  // ─── Projects ───
+  'project.created': (e) => ({
+    action: 'project.created',
+    targetType: 'project',
+    targetId: e.payload.projectId as string,
+    metadata: {
+      slug: e.payload.slug,
+      name: e.payload.name,
+      identifierPrefix: e.payload.identifierPrefix,
+    },
+  }),
+  'project.updated': (e) => ({
+    action: 'project.updated',
+    targetType: 'project',
+    targetId: e.payload.projectId as string,
+    metadata: { changes: e.payload.changes },
+  }),
+  'project.deleted': (e) => ({
+    action: 'project.deleted',
+    targetType: 'project',
+    targetId: e.payload.projectId as string,
+  }),
 };
 
 @Injectable()

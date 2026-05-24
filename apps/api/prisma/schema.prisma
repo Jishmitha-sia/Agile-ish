@@ -89,6 +89,7 @@ model User {
   ownedWorkspaces Workspace[]       @relation("WorkspaceOwner")
   auditLogs       AuditLog[]        @relation("AuditActor")
   invitesSent     WorkspaceMember[] @relation("InvitedBy")
+  projectsLed     Project[]         @relation("ProjectLead")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -228,6 +229,7 @@ model Workspace {
   members      WorkspaceMember[]
   defaultedBy  User[]            @relation("UserDefaultWorkspace")
   auditLogs    AuditLog[]
+  projects     Project[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -263,6 +265,58 @@ model WorkspaceMember {
   @@index([workspaceId])
   @@index([userId])
   @@map("workspace_members")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Project — the unit of work that owns issues and sprints (Phase 3+).
+//
+// One Workspace has many Projects. Slug is unique within a workspace (e.g.
+// two workspaces can each own a "web" project) — see the composite unique
+// on (workspaceId, slug). `identifierPrefix` (e.g. "ENG") seeds the issue
+// numbering scheme — issues will be ENG-1, ENG-2, … — and is also unique
+// per-workspace so an issue's prefix unambiguously names its project.
+// `issueCounter` is incremented atomically when an issue is created in
+// Phase 3+; it lives here so we don't need a separate sequence table.
+//
+// `visibility` and `leadUserId` are present in the schema but only loosely
+// used in Phase 2: every project is PUBLIC to workspace members and the
+// lead defaults to NULL (workspace OWNER acts as the implicit lead). They
+// exist now so we don't pay a migration to add them in Phase 3.
+//
+// Soft-delete via `deletedAt` from day one (we just converted Workspace
+// to the same pattern). `archivedAt` is a distinct concept — "done with
+// this project, hide it from active lists" — and is reserved for Phase 3+.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ProjectVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model Project {
+  id               String  @id @default(cuid())
+  workspaceId      String
+  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  slug             String  @db.VarChar(32)
+  name             String  @db.VarChar(80)
+  description      String? @db.VarChar(500)
+  identifierPrefix String  @db.VarChar(8)
+  issueCounter     Int     @default(0)
+  visibility       ProjectVisibility @default(PUBLIC)
+
+  leadUserId String?
+  lead       User?   @relation("ProjectLead", fields: [leadUserId], references: [id], onDelete: SetNull)
+
+  archivedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  @@unique([workspaceId, slug])
+  @@unique([workspaceId, identifierPrefix])
+  @@index([workspaceId, deletedAt])
+  @@index([leadUserId])
+  @@map("projects")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

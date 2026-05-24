@@ -19,6 +19,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 import { HealthModule } from './modules/health/health.module.js';
+import { ProjectsModule } from './modules/projects/projects.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
 
@@ -59,6 +60,7 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
     AuthModule,
     UsersModule,
     WorkspacesModule,
+    ProjectsModule,
     HealthModule,
   ],
   providers: [
