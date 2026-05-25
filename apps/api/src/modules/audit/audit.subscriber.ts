@@ -148,6 +148,39 @@ const AUDIT_MAP: Record<string, AuditMapper> = {
     },
   }),
 
+  // ─── Workspace invitations ───
+  'workspace.invitation.created': (e) => ({
+    action: 'workspace.invitation.created',
+    targetType: 'workspace',
+    targetId: e.payload.workspaceId as string,
+    metadata: {
+      invitationId: e.payload.invitationId,
+      invitedEmail: e.payload.email,
+      role: e.payload.role,
+      refreshed: e.payload.refreshed,
+    },
+  }),
+  'workspace.invitation.accepted': (e) => ({
+    action: 'workspace.invitation.accepted',
+    targetType: 'workspace',
+    targetId: e.payload.workspaceId as string,
+    metadata: {
+      invitationId: e.payload.invitationId,
+      userId: e.payload.userId,
+      email: e.payload.email,
+      role: e.payload.role,
+    },
+  }),
+  'workspace.invitation.revoked': (e) => ({
+    action: 'workspace.invitation.revoked',
+    targetType: 'workspace',
+    targetId: e.payload.workspaceId as string,
+    metadata: {
+      invitationId: e.payload.invitationId,
+      email: e.payload.email,
+    },
+  }),
+
   // ─── Projects ───
   'project.created': (e) => ({
     action: 'project.created',

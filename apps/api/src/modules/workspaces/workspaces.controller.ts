@@ -25,6 +25,7 @@ import {
   UpdateWorkspaceDto,
 } from './dto/workspaces.dto.js';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard.js';
+import { WorkspaceInvitationsService } from './services/workspace-invitations.service.js';
 import { WorkspaceMembersService } from './services/workspace-members.service.js';
 import { WorkspacesService } from './workspaces.service.js';
 
@@ -37,6 +38,7 @@ export class WorkspacesController {
   constructor(
     private readonly workspaces: WorkspacesService,
     private readonly members: WorkspaceMembersService,
+    private readonly invitations: WorkspaceInvitationsService,
   ) {}
 
   // ─── Workspace CRUD ──────────────────────────────────────────────────
@@ -126,5 +128,28 @@ export class WorkspacesController {
     @Param('userId') targetUserId: string,
   ): Promise<void> {
     await this.members.remove(user.id, ws.id, targetUserId as UserId);
+  }
+
+  // ─── Invitations ──────────────────────────────────────────────────────
+
+  @UseGuards(WorkspaceRoleGuard)
+  @RequireRole('ADMIN')
+  @Get(':workspaceSlug/invitations')
+  @ApiOperation({ summary: 'List pending invitations for this workspace (ADMIN+)' })
+  async listInvitations(@CurrentWorkspace() ws: RequestWorkspaceContext) {
+    return await this.invitations.listPending(ws.id);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @RequireRole('ADMIN')
+  @Delete(':workspaceSlug/invitations/:invitationId')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Revoke a pending invitation (ADMIN+)' })
+  async revokeInvitation(
+    @CurrentUser() user: RequestUser,
+    @CurrentWorkspace() ws: RequestWorkspaceContext,
+    @Param('invitationId') invitationId: string,
+  ): Promise<void> {
+    await this.invitations.revoke(user.id, ws.id, invitationId);
   }
 }

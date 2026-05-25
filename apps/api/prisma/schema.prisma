@@ -90,6 +90,8 @@ model User {
   auditLogs       AuditLog[]        @relation("AuditActor")
   invitesSent     WorkspaceMember[] @relation("InvitedBy")
   projectsLed     Project[]         @relation("ProjectLead")
+  invitationsSent     WorkspaceInvitation[] @relation("InvitationInviter")
+  invitationsAccepted WorkspaceInvitation[] @relation("InvitationConsumer")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -230,6 +232,7 @@ model Workspace {
   defaultedBy  User[]            @relation("UserDefaultWorkspace")
   auditLogs    AuditLog[]
   projects     Project[]
+  invitations  WorkspaceInvitation[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -265,6 +268,49 @@ model WorkspaceMember {
   @@index([workspaceId])
   @@index([userId])
   @@map("workspace_members")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WorkspaceInvitation — email-based invites for people who don't (yet)
+// have an account in Agile-ish.
+//
+// Same SHA-256 + single-use + time-limited pattern as EmailToken. The raw
+// token only exists in the email link; the DB only ever sees the hash.
+// `usedAt` + `usedByUserId` capture acceptance; `revokedAt` + `revokedById`
+// capture admin cancellation. `expiresAt` defaults to +14d at issue time.
+//
+// Partial-unique constraint on (workspaceId, email) WHILE usedAt IS NULL
+// AND revokedAt IS NULL is enforced in the migration (Prisma can't express
+// partial uniques in the schema DSL). Re-inviting an already-pending email
+// updates the row in place (refresh + resend), so the invariant holds.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model WorkspaceInvitation {
+  id          String   @id @default(cuid())
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  email       String   @db.Citext
+  role        WorkspaceRole
+
+  invitedById String?
+  invitedBy   User?    @relation("InvitationInviter", fields: [invitedById], references: [id], onDelete: SetNull)
+
+  tokenHash String   @unique @db.Char(64)
+  expiresAt DateTime
+  usedAt    DateTime?
+  usedByUserId String?
+  usedByUser   User?  @relation("InvitationConsumer", fields: [usedByUserId], references: [id], onDelete: SetNull)
+  revokedAt DateTime?
+  revokedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+  @@index([email])
+  @@index([expiresAt])
+  @@map("workspace_invitations")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

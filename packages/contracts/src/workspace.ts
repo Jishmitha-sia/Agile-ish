@@ -78,3 +78,67 @@ export const ChangeMemberRoleRequest = z.object({
   role: WorkspaceRole.exclude(['OWNER']),
 });
 export type ChangeMemberRoleRequest = z.infer<typeof ChangeMemberRoleRequest>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Invitations — email-based, for users who do not yet have an account.
+//
+// `InviteMemberResponse` is a discriminated union — the same POST endpoint
+// either creates a membership outright (existing user, returned with the
+// `member` discriminator) or creates a pending invitation (new user, the
+// `invitation` discriminator). The web client switches on this to toast
+// the right message.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const WorkspaceInvitation = z.object({
+  id: z.string(),
+  workspaceId: WorkspaceId,
+  email: z.string().email(),
+  role: WorkspaceRole.exclude(['OWNER']),
+  invitedBy: z
+    .object({
+      id: UserId,
+      displayName: z.string(),
+      email: z.string().email(),
+    })
+    .nullable(),
+  expiresAt: z.string().datetime(),
+  createdAt: z.string().datetime(),
+});
+export type WorkspaceInvitation = z.infer<typeof WorkspaceInvitation>;
+
+export const InviteMemberResponse = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('member'), member: WorkspaceMember }),
+  z.object({ kind: z.literal('invitation'), invitation: WorkspaceInvitation }),
+]);
+export type InviteMemberResponse = z.infer<typeof InviteMemberResponse>;
+
+/**
+ * Public lookup — what the accept-invite page renders before the user has
+ * authenticated. Returns only what's needed to confirm the invite is real
+ * (workspace name, role, inviter handle). Token comes in via query string;
+ * not in this shape.
+ */
+export const InvitationLookupResponse = z.object({
+  workspace: z.object({
+    slug: z.string(),
+    name: z.string(),
+  }),
+  email: z.string().email(),
+  role: WorkspaceRole.exclude(['OWNER']),
+  inviterDisplayName: z.string().nullable(),
+  expiresAt: z.string().datetime(),
+});
+export type InvitationLookupResponse = z.infer<typeof InvitationLookupResponse>;
+
+export const AcceptInvitationRequest = z.object({
+  token: z.string().min(1),
+});
+export type AcceptInvitationRequest = z.infer<typeof AcceptInvitationRequest>;
+
+export const AcceptInvitationResponse = z.object({
+  workspace: z.object({
+    slug: z.string(),
+    name: z.string(),
+  }),
+});
+export type AcceptInvitationResponse = z.infer<typeof AcceptInvitationResponse>;

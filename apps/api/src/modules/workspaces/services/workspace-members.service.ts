@@ -1,6 +1,7 @@
 import {
   hasWorkspaceRole,
   type InviteMemberRequest,
+  type InviteMemberResponse,
   type UserId,
   type WorkspaceId,
   type WorkspaceMember,
@@ -16,11 +17,12 @@ import {
 import { EventBus } from '../../../infra/events/events.module.js';
 import { PrismaService } from '../../../infra/prisma/prisma.service.js';
 import {
-  WorkspaceMemberInvitedEvent,
   WorkspaceMemberJoinedEvent,
   WorkspaceMemberRemovedEvent,
   WorkspaceMemberRoleChangedEvent,
 } from '../events/workspace.events.js';
+
+import { WorkspaceInvitationsService } from './workspace-invitations.service.js';
 
 /**
  * Membership lifecycle.
@@ -40,6 +42,7 @@ export class WorkspaceMembersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly events: EventBus,
+    private readonly invitations: WorkspaceInvitationsService,
   ) {}
 
   async list(workspaceId: WorkspaceId): Promise<WorkspaceMember[]> {
@@ -64,11 +67,22 @@ export class WorkspaceMembersService {
     }));
   }
 
+  /**
+   * Invite by email. Two-branch result:
+   *   • existing user → membership created immediately, returned with the
+   *     `member` discriminator so the UI can render the new row inline.
+   *   • no user yet  → invitation token minted + email sent, returned with
+   *     the `invitation` discriminator so the UI can list the pending row.
+   *
+   * Re-inviting an email that already has a pending invitation refreshes
+   * the existing row (new token + expiry, resends email). Re-inviting an
+   * existing member is a 409.
+   */
   async invite(
     actorId: UserId,
     workspaceId: WorkspaceId,
     input: InviteMemberRequest,
-  ): Promise<WorkspaceMember | { pending: true; email: string }> {
+  ): Promise<InviteMemberResponse> {
     if ((input.role as WorkspaceRole) === 'OWNER') {
       throw new ForbiddenException({
         code: 'FORBIDDEN',
@@ -78,18 +92,13 @@ export class WorkspaceMembersService {
 
     const user = await this.prisma.user.findUnique({ where: { email: input.email } });
     if (!user) {
-      // Phase 1.5 will create an email invite record + send a token.
-      // For Phase 1 we surface the pending state so the UI can render
-      // "invite sent" without lying about the actual delivery.
-      await this.events.publish(
-        new WorkspaceMemberInvitedEvent({
-          workspaceId,
-          actorId,
-          email: input.email,
-          role: input.role,
-        }),
+      const invitation = await this.invitations.issueOrRefresh(
+        actorId,
+        workspaceId,
+        input.email,
+        input.role,
       );
-      return { pending: true, email: input.email };
+      return { kind: 'invitation', invitation };
     }
 
     const existing = await this.prisma.workspaceMember.findUnique({
@@ -123,15 +132,18 @@ export class WorkspaceMembersService {
     );
 
     return {
-      userId: created.userId as UserId,
-      workspaceId: created.workspaceId as WorkspaceId,
-      role: created.role,
-      joinedAt: created.joinedAt.toISOString(),
-      user: {
-        id: created.user.id as UserId,
-        displayName: created.user.displayName,
-        email: created.user.email,
-        avatarUrl: created.user.avatarUrl,
+      kind: 'member',
+      member: {
+        userId: created.userId as UserId,
+        workspaceId: created.workspaceId as WorkspaceId,
+        role: created.role,
+        joinedAt: created.joinedAt.toISOString(),
+        user: {
+          id: created.user.id as UserId,
+          displayName: created.user.displayName,
+          email: created.user.email,
+          avatarUrl: created.user.avatarUrl,
+        },
       },
     };
   }

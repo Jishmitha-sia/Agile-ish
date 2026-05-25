@@ -9,8 +9,24 @@ import { useAuthStore } from '../stores/auth.store.js';
 import type { SessionResponse } from '@agile-ish/contracts';
 
 /**
- * Initialises the API client + attempts a single /auth/refresh on first
- * mount to bootstrap the session.
+ * Initialise the API client at module load so the very first React render
+ * already has it. Doing this in a useEffect leaves a window where any
+ * useQuery firing during the first render hits "ApiClient not initialised"
+ * — that surfaces as a swallowed query error and pages that depend on
+ * unauthenticated lookups (like /invite/[token]) render as if the data
+ * failed to load. The store getters used below are stable references, so
+ * eager init is safe.
+ */
+if (typeof window !== 'undefined') {
+  createApiClient({
+    getAccessToken: () => useAuthStore.getState().accessToken,
+    onRefreshed: (session) => useAuthStore.getState().setSession(session),
+    onUnauthenticated: () => useAuthStore.getState().clearSession(),
+  });
+}
+
+/**
+ * Bootstraps the session on first mount.
  *
  * Flow on page load:
  *   1. Auth status starts as 'initializing'.
@@ -28,15 +44,6 @@ export const AuthBootstrap = ({ children }: { children: ReactNode }) => {
   const clearSession = useAuthStore((s) => s.clearSession);
   const setStatus = useAuthStore((s) => s.setStatus);
   const bootstrapped = useRef(false);
-
-  // Wire the API client once. Subsequent calls return the same instance.
-  useEffect(() => {
-    createApiClient({
-      getAccessToken: () => useAuthStore.getState().accessToken,
-      onRefreshed: (session) => setSession(session),
-      onUnauthenticated: () => clearSession(),
-    });
-  }, [setSession, clearSession]);
 
   useEffect(() => {
     if (bootstrapped.current) return;

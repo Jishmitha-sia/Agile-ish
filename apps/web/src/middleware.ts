@@ -22,7 +22,7 @@ const REFRESH_COOKIE = process.env.NEXT_PUBLIC_REFRESH_COOKIE_NAME ?? 'agile_rt'
 // reset / verify routes are reached via email links and must work for
 // logged-out users without a redirect bounce.
 const AUTH_ROUTES = ['/login', '/signup'];
-const PUBLIC_ROUTES = ['/forgot-password', '/reset-password', '/verify-email'];
+const PUBLIC_ROUTES = ['/forgot-password', '/reset-password', '/verify-email', '/invite'];
 
 export function middleware(req: NextRequest): NextResponse {
   const { pathname } = req.nextUrl;
