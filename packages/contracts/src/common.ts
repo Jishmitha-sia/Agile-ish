@@ -112,6 +112,11 @@ export const AuditAction = z.enum([
   'workspace.invitation.created',
   'workspace.invitation.accepted',
   'workspace.invitation.revoked',
+  // Issues
+  'issue.created',
+  'issue.updated',
+  'issue.status_changed',
+  'issue.deleted',
 ]);
 export type AuditAction = z.infer<typeof AuditAction>;
 

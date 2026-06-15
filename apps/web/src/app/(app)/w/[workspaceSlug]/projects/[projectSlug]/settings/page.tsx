@@ -2,7 +2,8 @@
 
 import { UpdateProjectRequest } from '@agile-ish/contracts';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Trash2 } from 'lucide-react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -100,7 +101,17 @@ export default function ProjectSettingsPage() {
 
   return (
     <>
-      <TopBar title="Project settings" description={project?.name ?? projectSlug} />
+      <TopBar
+        title="Project settings"
+        description={project?.name ?? projectSlug}
+        actions={
+          <Button asChild variant="ghost" size="sm">
+            <Link href={`/w/${workspaceSlug}/projects/${projectSlug}`}>
+              <ArrowLeft /> Back
+            </Link>
+          </Button>
+        }
+      />
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-2xl space-y-10">
           {isLoading || !project ? (

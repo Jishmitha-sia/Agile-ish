@@ -92,6 +92,8 @@ model User {
   projectsLed     Project[]         @relation("ProjectLead")
   invitationsSent     WorkspaceInvitation[] @relation("InvitationInviter")
   invitationsAccepted WorkspaceInvitation[] @relation("InvitationConsumer")
+  issuesAuthored  Issue[]           @relation("IssueAuthor")
+  issuesAssigned  Issue[]           @relation("IssueAssignee")
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -353,6 +355,9 @@ model Project {
   leadUserId String?
   lead       User?   @relation("ProjectLead", fields: [leadUserId], references: [id], onDelete: SetNull)
 
+  // Reverse relations
+  issues     Issue[]
+
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
@@ -363,6 +368,81 @@ model Project {
   @@index([workspaceId, deletedAt])
   @@index([leadUserId])
   @@map("projects")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Issue — the unit of work inside a Project.
+//
+// Identifier scheme: `${project.identifierPrefix}-${issue.number}` (e.g.
+// "ENG-42"). `number` is composite-unique with projectId and is minted
+// atomically inside a transaction from `Project.issueCounter` — the
+// counter row gets locked via `update({ data: { issueCounter: { increment: 1 } } })`
+// so concurrent inserts serialise naturally without an explicit lock.
+//
+// `status` and `priority` use fixed enum sets — no per-project custom
+// columns yet. Linear ships fixed too; revisit only if a real use case
+// emerges. See feedback-polished-saas-not-hyperscale memory entry.
+//
+// Soft-delete via `deletedAt`. Reads filter `deletedAt: null` everywhere.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum IssueStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+  CANCELLED
+}
+
+enum IssuePriority {
+  NONE
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IssueType {
+  BUG
+  FEATURE
+  CHORE
+  TASK
+}
+
+model Issue {
+  id          String         @id @default(cuid())
+  projectId   String
+  project     Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  number      Int            // unique within project; minted atomically from Project.issueCounter
+
+  title       String         @db.VarChar(200)
+  description String?        // Markdown plaintext (rendered client-side via react-markdown)
+
+  type        IssueType      @default(TASK)
+  status      IssueStatus    @default(BACKLOG)
+  priority    IssuePriority  @default(NONE)
+
+  assigneeUserId String?
+  assignee       User?       @relation("IssueAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
+
+  // Nullable so a soft-deleted/removed user doesn't take their issues with them.
+  createdByUserId String?
+  createdBy       User?      @relation("IssueAuthor", fields: [createdByUserId], references: [id], onDelete: SetNull)
+
+  dueDate     DateTime?
+
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  deletedAt   DateTime?
+
+  @@unique([projectId, number])
+  @@index([projectId, status, deletedAt])
+  @@index([assigneeUserId])
+  @@index([createdByUserId])
+  @@index([deletedAt])
+  @@map("issues")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

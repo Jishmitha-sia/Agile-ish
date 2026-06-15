@@ -69,8 +69,13 @@ export const envSchema = z
     ARGON2_PARALLELISM: z.coerce.number().int().min(1).max(8).default(1),
 
     // ───── Rate limiting ─────
+    // Global limit defends against abuse, NOT normal browsing. A polished
+    // SaaS UI (filter chips, reactive refetches on focus, etc.) easily
+    // makes 5–10 req/sec during burst interactions. 300/min still blocks a
+    // sustained 5 req/sec attacker and any sane scraper, while leaving
+    // headroom for the way real users actually click.
     RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().min(1).default(60),
-    RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(120),
+    RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(300),
     AUTH_RATE_LIMIT_TTL_SECONDS: z.coerce.number().int().min(1).default(900),
     AUTH_RATE_LIMIT_MAX: z.coerce.number().int().min(1).default(10),
 
