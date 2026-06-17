@@ -3,7 +3,7 @@
 import { CreateIssueRequest, IssuePriority, IssueStatus, IssueType } from '@agile-ish/contracts';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
@@ -41,10 +41,12 @@ export function CreateIssueDialog({
   workspaceSlug,
   projectSlug,
   trigger,
+  defaultStatus,
 }: {
   workspaceSlug: string;
   projectSlug: string;
   trigger?: React.ReactNode;
+  defaultStatus?: IssueStatus;
 }) {
   const [open, setOpen] = useState(false);
   const create = useCreateIssue(workspaceSlug, projectSlug);
@@ -62,11 +64,25 @@ export function CreateIssueDialog({
       title: '',
       description: undefined,
       type: 'TASK',
-      status: 'BACKLOG',
+      status: defaultStatus ?? 'BACKLOG',
       priority: 'NONE',
       assigneeUserId: null,
     },
   });
+
+  // When the dialog opens reset the form so it picks up the current defaultStatus.
+  useEffect(() => {
+    if (open) {
+      reset({
+        title: '',
+        description: undefined,
+        type: 'TASK',
+        status: defaultStatus ?? 'BACKLOG',
+        priority: 'NONE',
+        assigneeUserId: null,
+      });
+    }
+  }, [open, defaultStatus, reset]);
 
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -86,7 +102,7 @@ export function CreateIssueDialog({
         title: '',
         description: undefined,
         type: 'TASK',
-        status: 'BACKLOG',
+        status: defaultStatus ?? 'BACKLOG',
         priority: 'NONE',
         assigneeUserId: null,
       });

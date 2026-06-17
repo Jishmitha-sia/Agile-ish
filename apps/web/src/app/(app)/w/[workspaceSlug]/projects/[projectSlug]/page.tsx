@@ -5,9 +5,10 @@ import {
   ISSUE_TYPE_ORDER,
   type IssueStatus,
   type IssueType,
- type Issue } from '@agile-ish/contracts';
+  type Issue,
+} from '@agile-ish/contracts';
 import { cn } from '@agile-ish/ui';
-import { ListTodo, Settings } from 'lucide-react';
+import { LayoutDashboard, LayoutList, ListTodo, Settings } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -16,30 +17,38 @@ import { TopBar } from '../../../../../../components/app-shell/top-bar.js';
 import { CreateIssueDialog } from '../../../../../../components/issues/create-issue-dialog.js';
 import {
   IssueIdentifier,
-  PriorityIcon,
   StatusBadge,
   StatusIcon,
   TypeIcon,
   dueDateLabel,
+  priorityLabel,
   statusLabel,
   typeLabel,
 } from '../../../../../../components/issues/issue-presentation.js';
+import { KanbanBoard } from '../../../../../../components/issues/kanban-board.js';
 import { Avatar, AvatarFallback, AvatarImage, initialsOf } from '../../../../../../components/ui/avatar.js';
 import { Button } from '../../../../../../components/ui/button.js';
 import { Spinner } from '../../../../../../components/ui/spinner.js';
 import { useIssues } from '../../../../../../hooks/use-issues.js';
 import { useProject } from '../../../../../../hooks/use-projects.js';
 
+type ViewMode = 'board' | 'list';
 
 /**
- * Project home — the issues list.
+ * Project home — Board view (default) + List view toggle.
  *
- * Phase 3 Batch B will add a board-view toggle (DnD Kit kanban). For
- * Batch A this is a dense row-based list with a status filter chip-row.
+ * Phase 3 Batch B: DnD Kit kanban board with optimistic status mutations.
+ * The list view from Batch A is preserved as a toggle.
+ *
+ * Board mode always fetches ALL issues (no statusFilter) and partitions
+ * client-side into columns. typeFilter applies to both views.
+ * List mode uses both statusFilter + typeFilter (original behaviour).
  */
 export default function ProjectHomePage() {
   const params = useParams<{ workspaceSlug: string; projectSlug: string }>();
   const { workspaceSlug, projectSlug } = params;
+
+  const [viewMode, setViewMode] = useState<ViewMode>('board');
   const [statusFilter, setStatusFilter] = useState<IssueStatus | null>(null);
   const [typeFilter, setTypeFilter] = useState<IssueType | null>(null);
 
@@ -47,16 +56,28 @@ export default function ProjectHomePage() {
     workspaceSlug,
     projectSlug,
   );
-  const { data: issues, isLoading: issuesLoading } = useIssues(
-    workspaceSlug,
-    projectSlug,
-    statusFilter || typeFilter
+
+  // Board mode: always fetch all issues — partitioned client-side into columns.
+  // List mode: respect statusFilter + typeFilter (original Batch A behaviour).
+  const listQuery =
+    viewMode === 'list' && (statusFilter ?? typeFilter)
       ? {
           ...(statusFilter ? { status: statusFilter } : {}),
           ...(typeFilter ? { type: typeFilter } : {}),
         }
-      : undefined,
+      : undefined;
+
+  const { data: allIssues, isLoading: issuesLoading } = useIssues(
+    workspaceSlug,
+    projectSlug,
+    listQuery,
   );
+
+  // In board mode, filter by type client-side (no extra API call).
+  const boardIssues =
+    viewMode === 'board' && typeFilter
+      ? (allIssues ?? []).filter((i) => i.type === typeFilter)
+      : (allIssues ?? []);
 
   return (
     <>
@@ -67,7 +88,26 @@ export default function ProjectHomePage() {
         }
         actions={
           <>
+            {/* View toggle */}
+            <div className="flex items-center rounded-md border border-border bg-card p-0.5">
+              <ViewToggleButton
+                active={viewMode === 'board'}
+                onClick={() => setViewMode('board')}
+                title="Board view"
+              >
+                <LayoutDashboard className="size-3.5" />
+              </ViewToggleButton>
+              <ViewToggleButton
+                active={viewMode === 'list'}
+                onClick={() => setViewMode('list')}
+                title="List view"
+              >
+                <LayoutList className="size-3.5" />
+              </ViewToggleButton>
+            </div>
+
             <CreateIssueDialog workspaceSlug={workspaceSlug} projectSlug={projectSlug} />
+
             <Button asChild variant="outline" size="sm">
               <Link href={`/w/${workspaceSlug}/projects/${projectSlug}/settings`}>
                 <Settings /> Settings
@@ -76,12 +116,26 @@ export default function ProjectHomePage() {
           </>
         }
       />
-      <main className="flex-1 overflow-y-auto px-8 py-6">
-        <div className="mx-auto max-w-5xl space-y-5">
+
+      {/* Board view has its own scroll container (horizontal columns) */}
+      <main
+        className={cn(
+          'flex-1 min-h-0',
+          viewMode === 'board' ? 'overflow-hidden flex flex-col' : 'overflow-y-auto',
+        )}
+      >
+        <div
+          className={cn(
+            viewMode === 'board'
+              ? 'flex flex-col flex-1 min-h-0 px-6 py-5'
+              : 'mx-auto max-w-5xl space-y-5 px-8 py-6',
+          )}
+        >
+          {/* Project header */}
           {projectLoading ? (
             <Spinner className="size-5 text-muted-foreground" />
           ) : project ? (
-            <header className="space-y-2">
+            <header className="shrink-0 space-y-1">
               <div className="flex items-center gap-2">
                 <span className="rounded-md bg-primary/15 px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-primary">
                   {project.identifierPrefix}
@@ -96,14 +150,26 @@ export default function ProjectHomePage() {
             </header>
           ) : null}
 
-          <div className="space-y-2">
-            <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+          {/* Filters — StatusFilter hidden on board (columns ARE the status) */}
+          <div className="shrink-0 space-y-2">
+            {viewMode === 'list' ? (
+              <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+            ) : null}
             <TypeFilter value={typeFilter} onChange={setTypeFilter} />
           </div>
 
+          {/* Content area */}
           {issuesLoading ? (
             <Spinner className="size-5 text-muted-foreground" />
-          ) : !issues || issues.length === 0 ? (
+          ) : viewMode === 'board' ? (
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <KanbanBoard
+                issues={boardIssues}
+                workspaceSlug={workspaceSlug}
+                projectSlug={projectSlug}
+              />
+            </div>
+          ) : !allIssues || allIssues.length === 0 ? (
             <EmptyIssues
               workspaceSlug={workspaceSlug}
               projectSlug={projectSlug}
@@ -115,7 +181,7 @@ export default function ProjectHomePage() {
             />
           ) : (
             <ul className="divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
-              {issues.map((issue) => (
+              {allIssues.map((issue) => (
                 <li key={issue.id}>
                   <IssueRow
                     issue={issue}
@@ -131,6 +197,42 @@ export default function ProjectHomePage() {
     </>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// View toggle button
+// ─────────────────────────────────────────────────────────────────────────────
+
+function ViewToggleButton({
+  active,
+  onClick,
+  title,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={cn(
+        'flex items-center justify-center rounded px-2 py-1 transition-colors',
+        active
+          ? 'bg-primary text-primary-foreground'
+          : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Filter chips (list view only)
+// ─────────────────────────────────────────────────────────────────────────────
 
 function StatusFilter({
   value,
@@ -201,6 +303,20 @@ function Chip({
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// List view row
+// ─────────────────────────────────────────────────────────────────────────────
+
+function listPriorityClasses(priority: Issue['priority']): string {
+  switch (priority) {
+    case 'URGENT': return 'border border-red-500/60 bg-red-500/10 text-red-400';
+    case 'HIGH':   return 'border border-orange-500/60 bg-orange-500/10 text-orange-400';
+    case 'MEDIUM': return 'border border-amber-500/60 bg-amber-500/10 text-amber-400';
+    case 'LOW':    return 'border border-green-500/60 bg-green-500/10 text-green-400';
+    case 'NONE':   return 'bg-muted text-muted-foreground';
+  }
+}
+
 function IssueRow({
   issue,
   workspaceSlug,
@@ -217,14 +333,17 @@ function IssueRow({
       href={href}
       className={cn(
         'group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/40',
-        issue.status === 'DONE' || issue.status === 'CANCELLED'
-          ? 'opacity-70'
-          : '',
+        issue.status === 'DONE' || issue.status === 'CANCELLED' ? 'opacity-70' : '',
       )}
     >
-      <TypeIcon type={issue.type} />
-      <PriorityIcon priority={issue.priority} />
-      <StatusIcon status={issue.status} />
+      <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-muted/60 text-muted-foreground">
+        {typeLabel(issue.type)}
+      </span>
+      {issue.priority !== 'NONE' ? (
+        <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-medium', listPriorityClasses(issue.priority))}>
+          {priorityLabel(issue.priority)}
+        </span>
+      ) : null}
       <IssueIdentifier identifier={issue.identifier} />
       <span className="min-w-0 flex-1 truncate text-sm">{issue.title}</span>
       {due ? (
@@ -248,6 +367,10 @@ function IssueRow({
     </Link>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Empty state (list view only)
+// ─────────────────────────────────────────────────────────────────────────────
 
 function EmptyIssues({
   workspaceSlug,
@@ -278,8 +401,7 @@ function EmptyIssues({
       <div className="space-y-1">
         <h4 className="text-base font-semibold">No issues yet</h4>
         <p className="max-w-sm text-sm text-muted-foreground">
-          Capture the first piece of work. Drag-and-drop board, sprints, and comments
-          land in the next batches.
+          Capture the first piece of work. Sprints and comments land in the next batch.
         </p>
       </div>
       <CreateIssueDialog

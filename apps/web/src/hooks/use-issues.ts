@@ -155,21 +155,73 @@ export const useUpdateIssue = (
         input,
       );
     },
+
+    /**
+     * Optimistic update — fires immediately when `mutate()` is called (e.g.
+     * on drag-and-drop). We snapshot the no-filter list so we can roll back
+     * on error, then apply the patch locally so the board reflects the change
+     * without waiting for the server.
+     */
+    onMutate: async (input) => {
+      // Cancel any in-flight refetches so they don't stomp the optimistic data.
+      await queryClient.cancelQueries({
+        queryKey: noFilterListKey(workspaceSlug, projectSlug),
+      });
+
+      // Snapshot — returned as context for rollback in onError.
+      const snapshot = queryClient.getQueryData<Issue[]>(
+        noFilterListKey(workspaceSlug, projectSlug),
+      );
+
+      // Optimistically update the no-filter list.
+      queryClient.setQueryData<Issue[] | undefined>(
+        noFilterListKey(workspaceSlug, projectSlug),
+        (prev) =>
+          prev?.map((i): Issue =>
+            i.number === number
+              ? {
+                  ...i,
+                  // Only override fields that were actually provided in the patch.
+                  ...(input.title !== undefined ? { title: input.title } : {}),
+                  ...(input.description !== undefined ? { description: input.description } : {}),
+                  ...(input.status !== undefined ? { status: input.status } : {}),
+                  ...(input.priority !== undefined ? { priority: input.priority } : {}),
+                  ...(input.type !== undefined ? { type: input.type } : {}),
+                  ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
+                }
+              : i,
+          ),
+      );
+
+      return { snapshot };
+    },
+
     onSuccess: (updated) => {
-      // Detail page — straight swap.
+      // Replace the optimistic row with the server-confirmed row (gets the
+      // real updatedAt, identifier, etc.).
       queryClient.setQueryData(
         issueKeys.detail(workspaceSlug, projectSlug, number),
         updated,
       );
-      // No-filter list — swap the row in place (status badge / assignee
-      // avatar visibly update without a refetch).
       queryClient.setQueryData<Issue[] | undefined>(
         noFilterListKey(workspaceSlug, projectSlug),
         (prev) => prev?.map((i) => (i.id === updated.id ? updated : i)),
       );
-      // Filtered variants — status changes can shift membership (BACKLOG
-      // → IN_PROGRESS removes it from the Backlog list AND adds it to
-      // the In progress list). Invalidate so the server resolves it.
+    },
+
+    onError: (_err, _input, context) => {
+      // Roll back the optimistic change so the board snaps back.
+      if (context?.snapshot !== undefined) {
+        queryClient.setQueryData(
+          noFilterListKey(workspaceSlug, projectSlug),
+          context.snapshot,
+        );
+      }
+    },
+
+    onSettled: () => {
+      // Always invalidate filtered variants (on success OR error) so any
+      // status-filter views stay consistent with the server.
       invalidateFilteredLists(queryClient, workspaceSlug, projectSlug);
     },
   });
