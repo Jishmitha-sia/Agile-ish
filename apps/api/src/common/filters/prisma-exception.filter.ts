@@ -17,7 +17,6 @@ import type { AuthenticatedRequest } from '../types/auth.types.js';
 import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
 import type { Response } from 'express';
 
-
 /**
  * Maps Prisma's runtime errors into the unified `ApiErrorResponse` envelope.
  *
@@ -90,7 +89,10 @@ export class PrismaExceptionFilter implements ExceptionFilter {
         const target = (err.meta?.target as string[] | string | undefined) ?? 'value';
         return {
           status: HttpStatus.CONFLICT,
-          body: this.envelope('CONFLICT', `A record with the same ${this.fmtTarget(target)} already exists`),
+          body: this.envelope(
+            'CONFLICT',
+            `A record with the same ${this.fmtTarget(target)} already exists`,
+          ),
         };
       }
       case 'P2025':

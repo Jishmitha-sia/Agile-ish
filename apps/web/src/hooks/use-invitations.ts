@@ -42,9 +42,7 @@ export const useRevokeInvitation = (workspaceSlug: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (invitationId: string): Promise<void> => {
-      await getApiClient().delete<void>(
-        `/workspaces/${workspaceSlug}/invitations/${invitationId}`,
-      );
+      await getApiClient().delete<void>(`/workspaces/${workspaceSlug}/invitations/${invitationId}`);
     },
     onSuccess: (_, invitationId) => {
       queryClient.setQueryData<WorkspaceInvitation[] | undefined>(

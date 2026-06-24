@@ -43,8 +43,9 @@ export const toApiError = async (res: Response): Promise<ApiError> => {
   // to a synthetic error so the UI still gets a usable message.
   return new ApiError(res.status, {
     code: 'INTERNAL_ERROR',
-    message: typeof parsed === 'object' && parsed && 'message' in parsed
-      ? String((parsed).message)
-      : `HTTP ${res.status}`,
+    message:
+      typeof parsed === 'object' && parsed && 'message' in parsed
+        ? String(parsed.message)
+        : `HTTP ${res.status}`,
   });
 };

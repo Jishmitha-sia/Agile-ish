@@ -137,11 +137,7 @@ export class WorkspaceInvitationsService {
     return rows.map((r) => this.toDto(r));
   }
 
-  async revoke(
-    actorId: UserId,
-    workspaceId: WorkspaceId,
-    invitationId: string,
-  ): Promise<void> {
+  async revoke(actorId: UserId, workspaceId: WorkspaceId, invitationId: string): Promise<void> {
     const inv = await this.prisma.workspaceInvitation.findFirst({
       where: { id: invitationId, workspaceId, usedAt: null, revokedAt: null },
     });

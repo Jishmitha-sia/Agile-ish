@@ -29,8 +29,7 @@ export default function HomeRedirect() {
     if (!user) return;
     const memberships = user.memberships;
     const target =
-      memberships.find((m) => m.workspaceId === user.defaultWorkspaceId) ??
-      memberships[0];
+      memberships.find((m) => m.workspaceId === user.defaultWorkspaceId) ?? memberships[0];
     if (target) {
       router.replace(`/w/${target.workspaceSlug}`);
     } else {
@@ -40,7 +39,7 @@ export default function HomeRedirect() {
 
   return (
     <div className="grid min-h-screen place-items-center">
-      <Spinner className="size-6 text-muted-foreground" />
+      <Spinner className="text-muted-foreground size-6" />
     </div>
   );
 }

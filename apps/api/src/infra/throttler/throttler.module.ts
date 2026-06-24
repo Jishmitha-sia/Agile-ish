@@ -25,8 +25,16 @@ import { RedisService } from '../redis/redis.service.js';
         const cfg = getAppConfig(config);
         return {
           throttlers: [
-            { name: 'global', ttl: cfg.rateLimit.global.ttlSeconds * 1000, limit: cfg.rateLimit.global.max },
-            { name: 'auth', ttl: cfg.rateLimit.auth.ttlSeconds * 1000, limit: cfg.rateLimit.auth.max },
+            {
+              name: 'global',
+              ttl: cfg.rateLimit.global.ttlSeconds * 1000,
+              limit: cfg.rateLimit.global.max,
+            },
+            {
+              name: 'auth',
+              ttl: cfg.rateLimit.auth.ttlSeconds * 1000,
+              limit: cfg.rateLimit.auth.max,
+            },
           ],
           storage: new ThrottlerStorageRedisService(redis.client),
         };

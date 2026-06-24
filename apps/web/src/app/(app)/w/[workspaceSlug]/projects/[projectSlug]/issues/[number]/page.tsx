@@ -43,6 +43,7 @@ import {
 } from '../../../../../../../../hooks/use-issues.js';
 import { ApiError } from '../../../../../../../../lib/api-error.js';
 import { useAuthStore } from '../../../../../../../../stores/auth.store.js';
+import { CommentsSection } from '../../../../../../../../components/issues/comments-section.js';
 
 import type {
   Issue,
@@ -75,9 +76,7 @@ export default function IssueDetailPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const membership = user?.memberships.find((m) => m.workspaceSlug === workspaceSlug);
-  const canDelete = membership
-    ? membership.role === 'OWNER' || membership.role === 'ADMIN'
-    : false;
+  const canDelete = membership ? membership.role === 'OWNER' || membership.role === 'ADMIN' : false;
 
   const { data: issue, isLoading } = useIssue(workspaceSlug, projectSlug, number);
 
@@ -97,7 +96,7 @@ export default function IssueDetailPage() {
       <main className="flex-1 overflow-y-auto px-8 py-6">
         <div className="mx-auto max-w-4xl">
           {isLoading || !issue ? (
-            <Spinner className="size-5 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-5" />
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_240px]">
               <IssueBody
@@ -105,15 +104,9 @@ export default function IssueDetailPage() {
                 workspaceSlug={workspaceSlug}
                 projectSlug={projectSlug}
                 canDelete={canDelete}
-                onDeleted={() =>
-                  router.replace(`/w/${workspaceSlug}/projects/${projectSlug}`)
-                }
+                onDeleted={() => router.replace(`/w/${workspaceSlug}/projects/${projectSlug}`)}
               />
-              <IssueSidebar
-                issue={issue}
-                workspaceSlug={workspaceSlug}
-                projectSlug={projectSlug}
-              />
+              <IssueSidebar issue={issue} workspaceSlug={workspaceSlug} projectSlug={projectSlug} />
             </div>
           )}
         </div>
@@ -164,9 +157,10 @@ function IssueBody({
               />
             ) : null}
           </div>
-          <div className="rounded-lg border border-border bg-card p-5">
+          <div className="border-border bg-card rounded-lg border p-5">
             <MarkdownBody>{issue.description}</MarkdownBody>
           </div>
+          <CommentsSection workspaceSlug={workspaceSlug} issueId={issue.id} />
         </>
       )}
     </section>
@@ -270,19 +264,15 @@ function DeleteIssueDialog({
         <DialogHeader>
           <DialogTitle>Delete {issue.identifier}?</DialogTitle>
           <DialogDescription>
-            Soft-deletes the issue. ADMINs can restore within 30 days (UI lands in a
-            future polish batch).
+            Soft-deletes the issue. ADMINs can restore within 30 days (UI lands in a future polish
+            batch).
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button variant="ghost" onClick={() => setOpen(false)}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            disabled={remove.isPending}
-            onClick={() => void handle()}
-          >
+          <Button variant="destructive" disabled={remove.isPending} onClick={() => void handle()}>
             {remove.isPending ? <Spinner /> : null}
             Delete issue
           </Button>
@@ -323,23 +313,20 @@ function IssueSidebar({
   }, [issue.dueDate]);
 
   const onDueDateBlur = async () => {
-    const next = dueDateInput
-      ? new Date(`${dueDateInput}T00:00:00.000Z`).toISOString()
-      : null;
+    const next = dueDateInput ? new Date(`${dueDateInput}T00:00:00.000Z`).toISOString() : null;
     if ((next ?? null) === (issue.dueDate ?? null)) return;
     await patch({ dueDate: next }, next ? 'Due date set' : 'Due date cleared');
   };
 
   return (
-    <aside className="space-y-3 self-start rounded-lg border border-border bg-card p-4 text-sm">
+    <aside className="border-border bg-card space-y-3 self-start rounded-lg border p-4 text-sm">
       <SidebarField label="Type">
         <div className="flex items-center gap-2">
           <TypeIcon type={issue.type} />
           <select
             value={issue.type}
-            onChange={(e) =>
-              void patch({ type: e.target.value as Issue['type'] }, 'Type updated')
-            }
+            disabled={update.isPending}
+            onChange={(e) => void patch({ type: e.target.value as Issue['type'] }, 'Type updated')}
             className={SELECT_CLASSES}
           >
             {IssueType.options.map((t) => (
@@ -353,6 +340,7 @@ function IssueSidebar({
       <SidebarField label="Status">
         <select
           value={issue.status}
+          disabled={update.isPending}
           onChange={(e) =>
             void patch({ status: e.target.value as Issue['status'] }, 'Status updated')
           }
@@ -370,11 +358,9 @@ function IssueSidebar({
           <PriorityIcon priority={issue.priority} />
           <select
             value={issue.priority}
+            disabled={update.isPending}
             onChange={(e) =>
-              void patch(
-                { priority: e.target.value as Issue['priority'] },
-                'Priority updated',
-              )
+              void patch({ priority: e.target.value as Issue['priority'] }, 'Priority updated')
             }
             className={SELECT_CLASSES}
           >
@@ -391,10 +377,7 @@ function IssueSidebar({
           workspaceSlug={workspaceSlug}
           value={issue.assignee}
           onChange={(next: UserId | null) =>
-            void patch(
-              { assigneeUserId: next },
-              next ? 'Assignee updated' : 'Assignee cleared',
-            )
+            void patch({ assigneeUserId: next }, next ? 'Assignee updated' : 'Assignee cleared')
           }
         />
       </SidebarField>

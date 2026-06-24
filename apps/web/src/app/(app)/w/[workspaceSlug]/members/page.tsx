@@ -9,7 +9,12 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 
 import { TopBar } from '../../../../../components/app-shell/top-bar.js';
-import { Avatar, AvatarFallback, AvatarImage, initialsOf } from '../../../../../components/ui/avatar.js';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  initialsOf,
+} from '../../../../../components/ui/avatar.js';
 import { Button } from '../../../../../components/ui/button.js';
 import {
   Dialog,
@@ -31,10 +36,7 @@ import {
 import { FormField } from '../../../../../components/ui/form-field.js';
 import { Input } from '../../../../../components/ui/input.js';
 import { Spinner } from '../../../../../components/ui/spinner.js';
-import {
-  useInvitations,
-  useRevokeInvitation,
-} from '../../../../../hooks/use-invitations.js';
+import { useInvitations, useRevokeInvitation } from '../../../../../hooks/use-invitations.js';
 import {
   useChangeMemberRole,
   useInviteMember,
@@ -63,9 +65,7 @@ export default function MembersPage() {
   const workspaceSlug = params.workspaceSlug;
   const user = useAuthStore((s) => s.user);
   const membership = user?.memberships.find((m) => m.workspaceSlug === workspaceSlug);
-  const canManage = membership
-    ? membership.role === 'OWNER' || membership.role === 'ADMIN'
-    : false;
+  const canManage = membership ? membership.role === 'OWNER' || membership.role === 'ADMIN' : false;
 
   const { data: workspace } = useWorkspace(workspaceSlug);
   const { data: members, isLoading: membersLoading } = useMembers(workspaceSlug);
@@ -76,29 +76,27 @@ export default function MembersPage() {
       <TopBar
         title="Members"
         description={workspace?.name ?? workspaceSlug}
-        actions={
-          canManage ? <InviteDialog workspaceSlug={workspaceSlug} /> : null
-        }
+        actions={canManage ? <InviteDialog workspaceSlug={workspaceSlug} /> : null}
       />
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-4xl space-y-10">
           <section className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                 Members
               </h3>
               {members?.length ? (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {members.length} {members.length === 1 ? 'member' : 'members'}
                 </span>
               ) : null}
             </div>
             {membersLoading ? (
-              <Spinner className="size-5 text-muted-foreground" />
+              <Spinner className="text-muted-foreground size-5" />
             ) : !members || members.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No members yet.</p>
+              <p className="text-muted-foreground text-sm">No members yet.</p>
             ) : (
-              <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+              <ul className="divide-border border-border bg-card divide-y rounded-lg border">
                 {members.map((m) => (
                   <li key={m.userId}>
                     <MemberRow
@@ -116,23 +114,24 @@ export default function MembersPage() {
           {canManage ? (
             <section className="space-y-3">
               <div className="flex items-baseline justify-between">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                   Pending invitations
                 </h3>
                 {invitations?.length ? (
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {invitations.length} pending
                   </span>
                 ) : null}
               </div>
               {invLoading ? (
-                <Spinner className="size-5 text-muted-foreground" />
+                <Spinner className="text-muted-foreground size-5" />
               ) : !invitations || invitations.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  No pending invitations. Click <span className="font-medium">Invite</span> to add someone.
+                <p className="text-muted-foreground text-sm">
+                  No pending invitations. Click <span className="font-medium">Invite</span> to add
+                  someone.
                 </p>
               ) : (
-                <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+                <ul className="divide-border border-border bg-card divide-y rounded-lg border">
                   {invitations.map((inv) => (
                     <li key={inv.id}>
                       <InvitationRow invitation={inv} workspaceSlug={workspaceSlug} />
@@ -193,18 +192,18 @@ function MemberRow({
         <div className="flex items-center gap-2">
           <span className="truncate text-sm font-medium">{member.user.displayName}</span>
           {isSelf ? (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
+            <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
               You
             </span>
           ) : null}
         </div>
-        <div className="truncate text-xs text-muted-foreground">{member.user.email}</div>
+        <div className="text-muted-foreground truncate text-xs">{member.user.email}</div>
       </div>
       <RoleBadge role={member.role} />
       {canEditThisRow ? (
         <DropdownMenu>
           <DropdownMenuTrigger
-            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+            className="text-muted-foreground hover:bg-accent hover:text-foreground rounded-md p-1.5 transition-colors"
             aria-label="Member actions"
           >
             <MoreHorizontal className="size-4" />
@@ -219,7 +218,7 @@ function MemberRow({
               >
                 {r}
                 {member.role === r ? (
-                  <span className="ml-auto text-[10px] text-muted-foreground">current</span>
+                  <span className="text-muted-foreground ml-auto text-[10px]">current</span>
                 ) : null}
               </DropdownMenuItem>
             ))}
@@ -259,12 +258,12 @@ function InvitationRow({
 
   return (
     <div className="flex items-center gap-3 px-4 py-3">
-      <div className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="bg-muted text-muted-foreground flex size-8 items-center justify-center rounded-full">
         <Mail className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{invitation.email}</div>
-        <div className="truncate text-xs text-muted-foreground">
+        <div className="text-muted-foreground truncate text-xs">
           Expires {formatExpiry(invitation.expiresAt)}
           {invitation.invitedBy ? ` · invited by ${invitation.invitedBy.displayName}` : null}
         </div>
@@ -320,7 +319,9 @@ function InviteDialog({ workspaceSlug }: { workspaceSlug: string }) {
     try {
       const result = await invite.mutateAsync(values);
       if (result.kind === 'member') {
-        toast.success(`${result.member.user.displayName} added as ${result.member.role.toLowerCase()}`);
+        toast.success(
+          `${result.member.user.displayName} added as ${result.member.role.toLowerCase()}`,
+        );
       } else {
         toast.success(`Invitation sent to ${result.invitation.email}`);
       }
@@ -355,8 +356,8 @@ function InviteDialog({ workspaceSlug }: { workspaceSlug: string }) {
         <DialogHeader>
           <DialogTitle>Invite a member</DialogTitle>
           <DialogDescription>
-            They&apos;ll get an email with a 14-day acceptance link. If they already
-            have an account, they&apos;re added immediately.
+            They&apos;ll get an email with a 14-day acceptance link. If they already have an
+            account, they&apos;re added immediately.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
@@ -372,7 +373,7 @@ function InviteDialog({ workspaceSlug }: { workspaceSlug: string }) {
           <FormField id="role" label="Role" error={errors.role?.message}>
             <select
               {...register('role')}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+              className="border-input bg-background focus-visible:ring-ring flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
             >
               {ASSIGNABLE_ROLES.map((r) => (
                 <option key={r} value={r}>

@@ -69,9 +69,7 @@ export class GitHubOAuthStrategy extends PassportStrategy(Strategy, 'github') {
     }
   }
 
-  private async fetchPrimaryVerifiedEmail(
-    accessToken: string,
-  ): Promise<{ email: string } | null> {
+  private async fetchPrimaryVerifiedEmail(accessToken: string): Promise<{ email: string } | null> {
     const res = await fetch('https://api.github.com/user/emails', {
       headers: {
         Authorization: `Bearer ${accessToken}`,

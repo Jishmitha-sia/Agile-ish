@@ -1,6 +1,5 @@
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 
-
 import { EventBus, type SerialisedDomainEvent } from '../../infra/events/events.module.js';
 
 import { AuditService } from './audit.service.js';

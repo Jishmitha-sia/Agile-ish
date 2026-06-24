@@ -38,7 +38,10 @@ function VerifyEmailFlow() {
 
   if (!token) {
     return (
-      <Card heading="Missing token" body="This page expects a ?token=… query parameter from your verification email.">
+      <Card
+        heading="Missing token"
+        body="This page expects a ?token=… query parameter from your verification email."
+      >
         <Button asChild className="w-full">
           <Link href="/login">Back to log in</Link>
         </Button>
@@ -49,7 +52,7 @@ function VerifyEmailFlow() {
   if (confirm.isPending || (confirm.isIdle && token)) {
     return (
       <Card heading="Verifying your email…" body="One moment.">
-        <Spinner className="mx-auto size-5 text-muted-foreground" />
+        <Spinner className="text-muted-foreground mx-auto size-5" />
       </Card>
     );
   }
@@ -91,7 +94,7 @@ function Card({
     <div className="grid min-h-screen place-items-center px-6">
       <div className="w-full max-w-sm space-y-4 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">{heading}</h1>
-        <p className="text-sm text-muted-foreground">{body}</p>
+        <p className="text-muted-foreground text-sm">{body}</p>
         <div className="pt-2">{children}</div>
       </div>
     </div>

@@ -55,12 +55,12 @@ pnpm db:seed                    # optional: demo@agile-ish.local / AgileIshDemo!
 pnpm dev
 ```
 
-| Surface | URL |
-| --- | --- |
-| Web | <http://localhost:3000> |
-| API | <http://localhost:4000> |
-| OpenAPI docs | <http://localhost:4000/docs> |
-| MailHog (captured emails) | <http://localhost:8025> |
+| Surface                    | URL                                                    |
+| -------------------------- | ------------------------------------------------------ |
+| Web                        | <http://localhost:3000>                                |
+| API                        | <http://localhost:4000>                                |
+| OpenAPI docs               | <http://localhost:4000/docs>                           |
+| MailHog (captured emails)  | <http://localhost:8025>                                |
 | Adminer (DB GUI, optional) | <http://localhost:8080> — start with `--profile tools` |
 
 ## Phase plan

@@ -82,7 +82,7 @@ export default function SignupPage() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           We&apos;ll spin up a personal workspace you can rename later.
         </p>
       </div>
@@ -91,7 +91,12 @@ export default function SignupPage() {
 
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormField id="displayName" label="Display name" error={errors.displayName?.message}>
-          <Input autoFocus autoComplete="name" placeholder="Ada Lovelace" {...register('displayName')} />
+          <Input
+            autoFocus
+            autoComplete="name"
+            placeholder="Ada Lovelace"
+            {...register('displayName')}
+          />
         </FormField>
 
         <FormField id="email" label="Email" error={errors.email?.message}>
@@ -132,7 +137,7 @@ export default function SignupPage() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Already have an account?{' '}
         <Link href="/login" className="text-foreground underline-offset-4 hover:underline">
           Log in

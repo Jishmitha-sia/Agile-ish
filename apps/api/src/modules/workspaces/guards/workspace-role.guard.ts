@@ -14,7 +14,6 @@ import { REQUIRE_ROLE_KEY } from '../decorators/require-role.decorator.js';
 
 import type { AuthenticatedRequest } from '../../../common/types/auth.types.js';
 
-
 /**
  * Resolves the request's workspace (from `:workspaceSlug` or `:workspaceId`
  * route param), looks up the caller's membership, attaches a
@@ -32,10 +31,10 @@ export class WorkspaceRoleGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const required = this.reflector.getAllAndOverride<WorkspaceRole | undefined>(
-      REQUIRE_ROLE_KEY,
-      [context.getHandler(), context.getClass()],
-    );
+    const required = this.reflector.getAllAndOverride<WorkspaceRole | undefined>(REQUIRE_ROLE_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
     const req = context.switchToHttp().getRequest<AuthenticatedRequest>();
 
     if (!req.user) {
@@ -52,9 +51,7 @@ export class WorkspaceRoleGuard implements CanActivate {
 
     // Build the workspace filter narrowly so Prisma doesn't see an `id: undefined`
     // (which `exactOptionalPropertyTypes` would reject).
-    const workspaceFilter = slug
-      ? { slug, deletedAt: null }
-      : { id: id!, deletedAt: null };
+    const workspaceFilter = slug ? { slug, deletedAt: null } : { id: id!, deletedAt: null };
 
     const membership = await this.prisma.workspaceMember.findFirst({
       where: {

@@ -18,9 +18,9 @@ const TTL_HOURS = 24;
 const TTL_SECONDS = TTL_HOURS * 3600;
 
 export type RequestOutcome =
-  | { kind: 'sent' }                   // verification email dispatched
-  | { kind: 'already_verified' }       // user is already verified — no-op
-  | { kind: 'unknown_email' };         // caller should NOT distinguish this from 'sent' to the client
+  | { kind: 'sent' } // verification email dispatched
+  | { kind: 'already_verified' } // user is already verified — no-op
+  | { kind: 'unknown_email' }; // caller should NOT distinguish this from 'sent' to the client
 
 export type ConfirmOutcome =
   | { kind: 'verified'; userId: string; email: string }
@@ -109,9 +109,7 @@ export class EmailVerificationService {
           where: { id: result.userId },
           data: { emailVerifiedAt: new Date() },
         });
-        await this.events.publish(
-          new EmailVerifiedEvent({ userId: user.id, email: user.email }),
-        );
+        await this.events.publish(new EmailVerifiedEvent({ userId: user.id, email: user.email }));
         return { kind: 'verified', userId: user.id, email: user.email };
       }
     }

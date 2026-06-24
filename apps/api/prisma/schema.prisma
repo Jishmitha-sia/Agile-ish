@@ -94,6 +94,7 @@ model User {
   invitationsAccepted WorkspaceInvitation[] @relation("InvitationConsumer")
   issuesAuthored  Issue[]           @relation("IssueAuthor")
   issuesAssigned  Issue[]           @relation("IssueAssignee")
+  commentsAuthored IssueComment[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -357,6 +358,7 @@ model Project {
 
   // Reverse relations
   issues     Issue[]
+  sprints    Sprint[]
 
   archivedAt DateTime?
   createdAt  DateTime  @default(now())
@@ -410,6 +412,42 @@ enum IssueType {
   TASK
 }
 
+enum SprintStatus {
+  PLANNED
+  ACTIVE
+  COMPLETED
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Sprint — a time-boxed iteration inside a Project.
+//
+// Status lifecycle: PLANNED → ACTIVE → COMPLETED.
+// Only one sprint per project may be ACTIVE at a time (enforced at service
+// layer). Soft-delete via `deletedAt`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Sprint {
+  id        String       @id @default(cuid())
+  projectId String
+  project   Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  name      String       @db.VarChar(100)
+  goal      String?      @db.VarChar(500)
+  startDate DateTime?
+  endDate   DateTime?
+  status    SprintStatus @default(PLANNED)
+
+  issues    Issue[]
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  deletedAt DateTime?
+
+  @@index([projectId, status, deletedAt])
+  @@index([deletedAt])
+  @@map("sprints")
+}
+
 model Issue {
   id          String         @id @default(cuid())
   projectId   String
@@ -424,6 +462,9 @@ model Issue {
   status      IssueStatus    @default(BACKLOG)
   priority    IssuePriority  @default(NONE)
 
+  sprintId    String?
+  sprint      Sprint?        @relation(fields: [sprintId], references: [id], onDelete: SetNull)
+
   assigneeUserId String?
   assignee       User?       @relation("IssueAssignee", fields: [assigneeUserId], references: [id], onDelete: SetNull)
 
@@ -433,16 +474,46 @@ model Issue {
 
   dueDate     DateTime?
 
+  comments    IssueComment[]
+
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   deletedAt   DateTime?
 
   @@unique([projectId, number])
   @@index([projectId, status, deletedAt])
+  @@index([sprintId])
   @@index([assigneeUserId])
   @@index([createdByUserId])
   @@index([deletedAt])
   @@map("issues")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IssueComment — threaded comments on an issue.
+//
+// Authors may edit/delete their own comments. Soft-delete via `deletedAt`.
+// Body is Markdown plaintext rendered client-side.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model IssueComment {
+  id       String  @id @default(cuid())
+  issueId  String
+  issue    Issue   @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  body     String  @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  @@index([issueId, deletedAt])
+  @@index([authorId])
+  @@index([deletedAt])
+  @@map("issue_comments")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -30,11 +30,11 @@ export function WorkspaceSwitcher({ currentSlug }: { currentSlug: string }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="hover:bg-accent focus-visible:ring-ring flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2"
         aria-label="Switch workspace"
       >
         <Avatar className="h-7 w-7 rounded-md">
-          <AvatarFallback className="rounded-md bg-primary/15 text-[10px] font-semibold text-primary">
+          <AvatarFallback className="bg-primary/15 text-primary rounded-md text-[10px] font-semibold">
             {initialsOf(current?.workspaceName ?? currentSlug)}
           </AvatarFallback>
         </Avatar>
@@ -42,11 +42,11 @@ export function WorkspaceSwitcher({ currentSlug }: { currentSlug: string }) {
           <div className="truncate text-sm font-medium leading-tight">
             {current?.workspaceName ?? currentSlug}
           </div>
-          <div className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+          <div className="text-muted-foreground truncate text-[11px] uppercase tracking-wide">
             {current?.role.toLowerCase() ?? 'member'}
           </div>
         </div>
-        <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
+        <ChevronsUpDown className="text-muted-foreground size-4 shrink-0" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="w-64">
@@ -55,22 +55,19 @@ export function WorkspaceSwitcher({ currentSlug }: { currentSlug: string }) {
           const isActive = m.workspaceSlug === currentSlug;
           return (
             <DropdownMenuItem key={m.workspaceId} asChild>
-              <Link
-                href={`/w/${m.workspaceSlug}`}
-                className="flex w-full items-center gap-2"
-              >
+              <Link href={`/w/${m.workspaceSlug}`} className="flex w-full items-center gap-2">
                 <Avatar className="h-6 w-6 rounded">
-                  <AvatarFallback className="rounded bg-primary/15 text-[10px] font-semibold text-primary">
+                  <AvatarFallback className="bg-primary/15 text-primary rounded text-[10px] font-semibold">
                     {initialsOf(m.workspaceName)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="truncate text-sm">{m.workspaceName}</div>
-                  <div className="truncate text-[11px] uppercase tracking-wide text-muted-foreground">
+                  <div className="text-muted-foreground truncate text-[11px] uppercase tracking-wide">
                     {m.role.toLowerCase()}
                   </div>
                 </div>
-                {isActive ? <Check className="size-4 shrink-0 text-primary" /> : null}
+                {isActive ? <Check className="text-primary size-4 shrink-0" /> : null}
               </Link>
             </DropdownMenuItem>
           );

@@ -58,9 +58,7 @@ export const deriveIdentifierPrefix = (name: string): string => {
 export const findAvailableProjectSlug = async (
   tx: {
     project: {
-      findFirst: (args: {
-        where: { workspaceId: string; slug: string };
-      }) => Promise<unknown>;
+      findFirst: (args: { where: { workspaceId: string; slug: string } }) => Promise<unknown>;
     };
   },
   workspaceId: string,

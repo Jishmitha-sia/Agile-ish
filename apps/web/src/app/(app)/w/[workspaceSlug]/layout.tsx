@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useEffect, type ReactNode } from 'react';
 
 import { Sidebar } from '../../../../components/app-shell/sidebar.js';
+import { CommandPalette } from '../../../../components/ui/command-palette.js';
 import { Spinner } from '../../../../components/ui/spinner.js';
 import { useAuthStore } from '../../../../stores/auth.store.js';
 
@@ -34,7 +35,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
   if (!user || !isMember) {
     return (
       <div className="grid min-h-screen place-items-center">
-        <Spinner className="size-6 text-muted-foreground" />
+        <Spinner className="text-muted-foreground size-6" />
       </div>
     );
   }
@@ -43,6 +44,7 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
     <div className="flex h-screen w-full">
       <Sidebar workspaceSlug={workspaceSlug} />
       <div className="flex min-w-0 flex-1 flex-col">{children}</div>
+      <CommandPalette workspaceSlug={workspaceSlug} />
     </div>
   );
 }

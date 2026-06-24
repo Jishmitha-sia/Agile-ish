@@ -1,5 +1,6 @@
 import {
   type CreateWorkspaceRequest,
+  type SearchResponse,
   type UpdateWorkspaceRequest,
   type UserId,
   type Workspace,
@@ -162,5 +163,92 @@ export class WorkspacesService {
       createdAt: ws.createdAt.toISOString(),
       updatedAt: ws.updatedAt.toISOString(),
     };
+  }
+
+  async search(
+    workspaceId: WorkspaceId,
+    workspaceSlug: string,
+    query: string,
+  ): Promise<SearchResponse> {
+    const term = `%${query.toLowerCase()}%`;
+
+    const [issues, projects, members] = await Promise.all([
+      this.prisma.issue.findMany({
+        where: {
+          deletedAt: null,
+          project: { workspaceId, deletedAt: null },
+          OR: [
+            { title: { contains: query, mode: 'insensitive' } },
+            { project: { identifierPrefix: { contains: query, mode: 'insensitive' } } },
+          ],
+        },
+        include: {
+          project: { select: { identifierPrefix: true, slug: true } },
+        },
+        take: 10,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.project.findMany({
+        where: {
+          workspaceId,
+          deletedAt: null,
+          OR: [
+            { name: { contains: query, mode: 'insensitive' } },
+            { identifierPrefix: { contains: query, mode: 'insensitive' } },
+            { slug: { contains: query, mode: 'insensitive' } },
+          ],
+        },
+        take: 5,
+        orderBy: { updatedAt: 'desc' },
+      }),
+      this.prisma.workspaceMember.findMany({
+        where: {
+          workspaceId,
+          user: {
+            deletedAt: null,
+            OR: [
+              { displayName: { contains: query, mode: 'insensitive' } },
+              { email: { contains: query, mode: 'insensitive' } },
+            ],
+          },
+        },
+        include: {
+          user: { select: { id: true, displayName: true, email: true, avatarUrl: true } },
+        },
+        take: 5,
+      }),
+    ]);
+
+    // Suppress unused variable warning for term (kept for potential raw query use)
+    void term;
+
+    const results: SearchResponse['results'] = [
+      ...issues.map((i) => ({
+        kind: 'issue' as const,
+        id: i.id,
+        identifier: `${i.project.identifierPrefix}-${i.number}`,
+        title: i.title,
+        status: i.status,
+        projectSlug: i.project.slug,
+        workspaceSlug,
+      })),
+      ...projects.map((p) => ({
+        kind: 'project' as const,
+        id: p.id,
+        name: p.name,
+        slug: p.slug,
+        identifierPrefix: p.identifierPrefix,
+        workspaceSlug,
+      })),
+      ...members.map((m) => ({
+        kind: 'member' as const,
+        id: m.user.id,
+        displayName: m.user.displayName,
+        email: m.user.email,
+        avatarUrl: m.user.avatarUrl,
+      })),
+    ];
+
+    return { results };
   }
 }

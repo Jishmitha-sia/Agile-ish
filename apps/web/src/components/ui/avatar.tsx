@@ -2,12 +2,7 @@
 
 import { cn } from '@agile-ish/ui';
 import * as Primitive from '@radix-ui/react-avatar';
-import {
-  forwardRef,
-  type ComponentPropsWithoutRef,
-  type ComponentRef,
-} from 'react';
-
+import { forwardRef, type ComponentPropsWithoutRef, type ComponentRef } from 'react';
 
 export const Avatar = forwardRef<
   ComponentRef<typeof Primitive.Root>,
@@ -15,10 +10,7 @@ export const Avatar = forwardRef<
 >(({ className, ...props }, ref) => (
   <Primitive.Root
     ref={ref}
-    className={cn(
-      'relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full',
-      className,
-    )}
+    className={cn('relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full', className)}
     {...props}
   />
 ));
@@ -43,7 +35,7 @@ export const AvatarFallback = forwardRef<
   <Primitive.Fallback
     ref={ref}
     className={cn(
-      'flex h-full w-full items-center justify-center rounded-full bg-muted text-xs font-medium text-muted-foreground',
+      'bg-muted text-muted-foreground flex h-full w-full items-center justify-center rounded-full text-xs font-medium',
       className,
     )}
     {...props}

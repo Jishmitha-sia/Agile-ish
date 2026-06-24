@@ -19,9 +19,7 @@ import { RefreshTokenService } from './refresh-token.service.js';
 const TTL_MINUTES = 60;
 const TTL_SECONDS = TTL_MINUTES * 60;
 
-export type RequestOutcome =
-  | { kind: 'sent' }
-  | { kind: 'unknown_email' };
+export type RequestOutcome = { kind: 'sent' } | { kind: 'unknown_email' };
 
 export type ConfirmOutcome =
   | { kind: 'reset'; userId: string }

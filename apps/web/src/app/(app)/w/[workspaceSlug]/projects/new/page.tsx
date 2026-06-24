@@ -38,9 +38,7 @@ export default function CreateProjectPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const membership = user?.memberships.find((m) => m.workspaceSlug === workspaceSlug);
-  const canCreate = membership
-    ? membership.role === 'OWNER' || membership.role === 'ADMIN'
-    : false;
+  const canCreate = membership ? membership.role === 'OWNER' || membership.role === 'ADMIN' : false;
   const create = useCreateProject(workspaceSlug);
 
   const {
@@ -92,7 +90,7 @@ export default function CreateProjectPage() {
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-md space-y-4 text-center">
           <h1 className="text-xl font-semibold">You can&apos;t create projects here</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Only workspace admins can create projects. Ask an admin to do it for you.
           </p>
           <Button asChild variant="outline">
@@ -108,14 +106,14 @@ export default function CreateProjectPage() {
       <div className="mx-auto max-w-md space-y-6">
         <Link
           href={`/w/${workspaceSlug}`}
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
         >
           <ArrowLeft className="size-4" /> Back
         </Link>
 
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">Create a project</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Projects own issues, sprints, and boards (coming in Phase 3).
           </p>
         </div>
@@ -143,10 +141,7 @@ export default function CreateProjectPage() {
             helperText="2–32 chars, lowercase + hyphens. Defaults to a slug derived from the name."
             error={errors.slug?.message}
           >
-            <Input
-              placeholder="web-app"
-              {...register('slug', { setValueAs: emptyToUndefined })}
-            />
+            <Input placeholder="web-app" {...register('slug', { setValueAs: emptyToUndefined })} />
           </FormField>
 
           <FormField

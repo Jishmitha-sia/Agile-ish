@@ -2,7 +2,6 @@ import { DomainEvent } from '../../../infra/events/events.module.js';
 
 import type { OAuthProvider } from '@prisma/client';
 
-
 interface OAuthSigninPayload extends Record<string, unknown> {
   userId: string;
   provider: OAuthProvider;

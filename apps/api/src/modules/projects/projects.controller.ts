@@ -1,6 +1,4 @@
-import {
-  ProjectSlug as ProjectSlugSchema,
-} from '@agile-ish/contracts';
+import { ProjectSlug as ProjectSlugSchema } from '@agile-ish/contracts';
 import {
   Body,
   Controller,
@@ -23,10 +21,7 @@ import { WorkspaceRoleGuard } from '../workspaces/guards/workspace-role.guard.js
 import { CreateProjectDto, UpdateProjectDto } from './dto/projects.dto.js';
 import { ProjectsService } from './projects.service.js';
 
-import type {
-  RequestUser,
-  RequestWorkspaceContext,
-} from '../../common/types/auth.types.js';
+import type { RequestUser, RequestWorkspaceContext } from '../../common/types/auth.types.js';
 
 /**
  * Projects are addressed under the workspace they belong to:

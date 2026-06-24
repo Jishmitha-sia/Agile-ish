@@ -1,7 +1,6 @@
 import { Module, type Provider } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 
-
 import { parseEnv } from '../../config/env.schema.js';
 
 import { AuthController } from './auth.controller.js';

@@ -12,7 +12,6 @@ import type { AuthenticatedRequest } from '../types/auth.types.js';
 import type { ApiErrorCode, ApiErrorResponse } from '@agile-ish/contracts';
 import type { Response } from 'express';
 
-
 /**
  * Global catch-all filter. Every non-2xx response goes through here and
  * comes out in the unified `ApiErrorResponse` envelope. We do this once,

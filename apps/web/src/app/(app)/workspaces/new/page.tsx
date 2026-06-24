@@ -83,7 +83,7 @@ export default function CreateWorkspacePage() {
         {hasExistingMemberships ? (
           <Link
             href="/"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
           >
             <ArrowLeft className="size-4" /> Back
           </Link>
@@ -91,7 +91,7 @@ export default function CreateWorkspacePage() {
 
         <div className="space-y-2">
           <h1 className="text-2xl font-semibold tracking-tight">Create a workspace</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {hasExistingMemberships
               ? "Spin up a new workspace. You'll be its owner."
               : "You're not a member of any workspace yet. Create one to get started."}
@@ -109,10 +109,7 @@ export default function CreateWorkspacePage() {
             helperText="3–32 chars, lowercase + hyphens. Defaults to a slug derived from the name."
             error={errors.slug?.message}
           >
-            <Input
-              placeholder="acme-eng"
-              {...register('slug', { setValueAs: emptyToUndefined })}
-            />
+            <Input placeholder="acme-eng" {...register('slug', { setValueAs: emptyToUndefined })} />
           </FormField>
 
           <FormField

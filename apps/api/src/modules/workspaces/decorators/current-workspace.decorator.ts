@@ -1,6 +1,9 @@
 import { createParamDecorator, type ExecutionContext, NotFoundException } from '@nestjs/common';
 
-import type { AuthenticatedRequest, RequestWorkspaceContext } from '../../../common/types/auth.types.js';
+import type {
+  AuthenticatedRequest,
+  RequestWorkspaceContext,
+} from '../../../common/types/auth.types.js';
 
 /**
  * Parameter decorator that returns the workspace context resolved by

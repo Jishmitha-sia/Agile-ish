@@ -5,11 +5,7 @@ import { OAuthProvider } from '@prisma/client';
 
 import { EventBus } from '../../../infra/events/events.module.js';
 import { PrismaService } from '../../../infra/prisma/prisma.service.js';
-import {
-  OAuthLinkedEvent,
-  OAuthSigninEvent,
-  OAuthSignupEvent,
-} from '../events/oauth.events.js';
+import { OAuthLinkedEvent, OAuthSigninEvent, OAuthSignupEvent } from '../events/oauth.events.js';
 
 /**
  * The find-or-create-and-link flow for OAuth.
@@ -50,7 +46,7 @@ export interface OAuthProfile {
 
 export type OAuthOutcome =
   | { kind: 'signed_in'; userId: string }
-  | { kind: 'linked';    userId: string }
+  | { kind: 'linked'; userId: string }
   | { kind: 'signed_up'; userId: string }
   | { kind: 'email_collision' }; // existing password account with same email, unverified provider email
 

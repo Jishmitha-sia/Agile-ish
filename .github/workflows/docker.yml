@@ -10,7 +10,7 @@ on:
 
 permissions:
   contents: read
-  packages: write   # for ghcr.io publish
+  packages: write # for ghcr.io publish
 
 env:
   REGISTRY: ghcr.io

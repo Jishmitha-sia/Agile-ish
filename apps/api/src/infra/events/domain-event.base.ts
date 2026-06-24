@@ -11,7 +11,9 @@ import { v7 as uuidV7 } from 'uuid';
  * Date instances inside nested structures) on an event — they have to
  * round-trip through Redis pub/sub. Stick to primitives + ISO strings.
  */
-export abstract class DomainEvent<TPayload extends Record<string, unknown> = Record<string, unknown>> {
+export abstract class DomainEvent<
+  TPayload extends Record<string, unknown> = Record<string, unknown>,
+> {
   /** Unique event id (UUIDv7 — sortable, time-prefixed). */
   public readonly eventId: string = uuidV7();
   /** ISO timestamp of when the event was created. */

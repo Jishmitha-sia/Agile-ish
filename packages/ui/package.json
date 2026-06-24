@@ -12,7 +12,9 @@
     "./styles.css": "./src/styles.css",
     "./lib/cn": "./src/lib/cn.ts"
   },
-  "files": ["src"],
+  "files": [
+    "src"
+  ],
   "scripts": {
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",

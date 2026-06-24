@@ -13,7 +13,6 @@ import { Throttle } from '@nestjs/throttler';
 
 import { Public } from '../../common/decorators/public.decorator.js';
 
-
 import {
   ConfirmEmailVerificationDto,
   RequestEmailVerificationDto,

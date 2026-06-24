@@ -1,23 +1,21 @@
 'use client';
 
-import {
-  ISSUE_STATUS_ORDER,
-  type Issue,
-  type IssueStatus,
-} from '@agile-ish/contracts';
+import { ISSUE_STATUS_ORDER, type Issue, type IssueStatus } from '@agile-ish/contracts';
 import { cn } from '@agile-ish/ui';
 import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
-  closestCenter,
+  pointerWithin,
+  rectIntersection,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
+  type CollisionDetection,
 } from '@dnd-kit/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ListTodo, Plus } from 'lucide-react';
@@ -52,11 +50,16 @@ const COMPLETED_STATUSES = new Set<IssueStatus>(['DONE', 'CANCELLED']);
 /** Maps priority → colored border + text classes for the card badge. */
 function priorityBadgeClasses(priority: Issue['priority']): string {
   switch (priority) {
-    case 'URGENT': return 'border border-red-500/60 bg-red-500/10 text-red-400';
-    case 'HIGH':   return 'border border-orange-500/60 bg-orange-500/10 text-orange-400';
-    case 'MEDIUM': return 'border border-amber-500/60 bg-amber-500/10 text-amber-400';
-    case 'LOW':    return 'border border-green-500/60 bg-green-500/10 text-green-400';
-    case 'NONE':   return 'bg-muted text-muted-foreground';
+    case 'URGENT':
+      return 'border border-red-500/60 bg-red-500/10 text-red-400';
+    case 'HIGH':
+      return 'border border-orange-500/60 bg-orange-500/10 text-orange-400';
+    case 'MEDIUM':
+      return 'border border-amber-500/60 bg-amber-500/10 text-amber-400';
+    case 'LOW':
+      return 'border border-green-500/60 bg-green-500/10 text-green-400';
+    case 'NONE':
+      return 'bg-muted text-muted-foreground';
   }
 }
 
@@ -81,11 +84,7 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
   // only ever drag one card at a time, we create the mutation with the active
   // issue's number when drag starts and keep it for the drag lifecycle.
   const [draggingNumber, setDraggingNumber] = useState<number | null>(null);
-  const updateIssue = useUpdateIssue(
-    workspaceSlug,
-    projectSlug,
-    draggingNumber ?? 0,
-  );
+  const updateIssue = useUpdateIssue(workspaceSlug, projectSlug, draggingNumber ?? 0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -98,6 +97,15 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
 
   const columnMap = buildColumnMap(issues);
 
+  // Custom collision detection: prefer pointer-within for the column droppables
+  // first, fall back to rect intersection. This prevents card-vs-column
+  // ambiguity when dragging over a column that already has cards in it.
+  const collisionDetection: CollisionDetection = (args) => {
+    const pointerCollisions = pointerWithin(args);
+    if (pointerCollisions.length > 0) return pointerCollisions;
+    return rectIntersection(args);
+  };
+
   const handleDragStart = ({ active }: DragStartEvent) => {
     const issue = issues.find((i) => i.id === active.id);
     if (!issue) return;
@@ -109,7 +117,9 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
     setActiveIssue(null);
 
     if (!over) return;
+    // Guard: over.id must be a valid IssueStatus (column id), not a card id.
     const targetStatus = over.id as IssueStatus;
+    if (!ISSUE_STATUS_ORDER.includes(targetStatus)) return;
     const issue = issues.find((i) => i.id === active.id);
     if (!issue || issue.status === targetStatus) return;
 
@@ -117,9 +127,7 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
       { status: targetStatus },
       {
         onError: (err) => {
-          toast.error(
-            err instanceof ApiError ? err.message : 'Could not move the issue.',
-          );
+          toast.error(err instanceof ApiError ? err.message : 'Could not move the issue.');
         },
       },
     );
@@ -132,13 +140,13 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
   // Empty board — shown when project has no issues at all.
   if (issues.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-card/40 px-6 py-16 text-center">
-        <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+      <div className="border-border bg-card/40 flex flex-col items-center gap-4 rounded-lg border border-dashed px-6 py-16 text-center">
+        <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
           <ListTodo className="size-6" />
         </div>
         <div className="space-y-1">
           <h4 className="text-base font-semibold">No issues yet</h4>
-          <p className="max-w-sm text-sm text-muted-foreground">
+          <p className="text-muted-foreground max-w-sm text-sm">
             Create your first issue to see it on the board.
           </p>
         </div>
@@ -154,7 +162,7 @@ export function KanbanBoard({ issues, workspaceSlug, projectSlug }: KanbanBoardP
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
@@ -208,11 +216,11 @@ function KanbanColumn({
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
-    <div className="flex w-[280px] shrink-0 flex-col h-full gap-2">
+    <div className="flex h-full w-[280px] shrink-0 flex-col gap-2">
       {/* Column header */}
       <div
         className={cn(
-          'shrink-0 flex items-center gap-2 rounded-md px-2 py-1.5',
+          'flex shrink-0 items-center gap-2 rounded-md px-2 py-1.5',
           isDimmed ? 'opacity-60' : '',
         )}
       >
@@ -225,7 +233,7 @@ function KanbanColumn({
         >
           {statusLabel(status)}
         </span>
-        <span className="ml-auto rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+        <span className="bg-muted text-muted-foreground ml-auto rounded-full px-1.5 py-0.5 text-[10px]">
           {issues.length}
         </span>
         <CreateIssueDialog
@@ -236,7 +244,7 @@ function KanbanColumn({
             <button
               type="button"
               title={`New ${statusLabel(status)} issue`}
-              className="rounded p-0.5 text-muted-foreground/40 hover:bg-accent hover:text-foreground transition-colors"
+              className="text-muted-foreground/40 hover:bg-accent hover:text-foreground rounded p-0.5 transition-colors"
             >
               <Plus className="size-3.5" />
             </button>
@@ -248,10 +256,8 @@ function KanbanColumn({
       <div
         ref={setNodeRef}
         className={cn(
-          'flex-1 min-h-[80px] overflow-y-auto flex flex-col gap-2 rounded-lg border p-2 transition-colors duration-150',
-          isOver
-            ? 'border-primary/50 bg-primary/5'
-            : 'border-border/40 bg-muted/5',
+          'flex min-h-[80px] flex-1 flex-col gap-2 overflow-y-auto rounded-lg border p-2 transition-colors duration-150',
+          isOver ? 'border-primary/50 bg-primary/5' : 'border-border/40 bg-muted/5',
           isDimmed ? 'opacity-70' : '',
         )}
       >
@@ -276,11 +282,7 @@ function KanbanColumn({
                 exit={{ opacity: 0, scale: 0.96 }}
                 transition={{ duration: 0.15 }}
               >
-                <KanbanCard
-                  issue={issue}
-                  workspaceSlug={workspaceSlug}
-                  projectSlug={projectSlug}
-                />
+                <KanbanCard issue={issue} workspaceSlug={workspaceSlug} projectSlug={projectSlug} />
               </motion.div>
             ))
           )}
@@ -322,9 +324,9 @@ function KanbanCard({
       ref={setNodeRef}
       style={style}
       className={cn(
-        'group relative rounded-md border border-border bg-card p-3 shadow-sm transition-shadow',
+        'border-border bg-card group relative rounded-md border p-3 shadow-sm transition-shadow',
         isDragging && !isOverlay ? 'opacity-40 shadow-none' : '',
-        isOverlay ? 'rotate-1 shadow-2xl ring-2 ring-primary/40' : 'hover:shadow-md',
+        isOverlay ? 'ring-primary/40 rotate-1 shadow-2xl ring-2' : 'hover:shadow-md',
         'cursor-grab active:cursor-grabbing',
       )}
       {...listeners}
@@ -336,7 +338,7 @@ function KanbanCard({
       {/* Title — link to detail page; click still navigates if not dragging */}
       <Link
         href={href}
-        className="mt-1 block text-sm font-medium leading-snug text-foreground group-hover:text-primary/90"
+        className="text-foreground group-hover:text-primary/90 mt-1 block text-sm font-medium leading-snug"
         onClick={(e) => {
           // Prevent navigation while dragging
           if (isDragging) e.preventDefault();
@@ -348,11 +350,16 @@ function KanbanCard({
 
       {/* Footer row — text labels only, no icons */}
       <div className="mt-2.5 flex items-center gap-1.5">
-        <span className="rounded px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground">
+        <span className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 text-[10px] font-medium">
           {typeLabel(issue.type)}
         </span>
         {issue.priority !== 'NONE' ? (
-          <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-medium', priorityBadgeClasses(issue.priority))}>
+          <span
+            className={cn(
+              'rounded px-1.5 py-0.5 text-[10px] font-medium',
+              priorityBadgeClasses(issue.priority),
+            )}
+          >
             {priorityLabel(issue.priority)}
           </span>
         ) : null}
@@ -381,9 +388,10 @@ function KanbanCard({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function buildColumnMap(issues: Issue[]): Record<IssueStatus, Issue[]> {
-  const map = Object.fromEntries(
-    ISSUE_STATUS_ORDER.map((s) => [s, [] as Issue[]]),
-  ) as Record<IssueStatus, Issue[]>;
+  const map = Object.fromEntries(ISSUE_STATUS_ORDER.map((s) => [s, [] as Issue[]])) as Record<
+    IssueStatus,
+    Issue[]
+  >;
   for (const issue of issues) {
     map[issue.status].push(issue);
   }

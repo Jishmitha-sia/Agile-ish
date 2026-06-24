@@ -76,7 +76,7 @@ function ResetPasswordForm() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Set a new password</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Enter your new password below. After resetting, all other sessions will be logged out.
         </p>
       </div>
@@ -104,7 +104,7 @@ function ResetPasswordForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         <Link href="/login" className="text-foreground underline-offset-4 hover:underline">
           Back to log in
         </Link>

@@ -21,6 +21,8 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard.js';
 import { HealthModule } from './modules/health/health.module.js';
 import { IssuesModule } from './modules/issues/issues.module.js';
 import { ProjectsModule } from './modules/projects/projects.module.js';
+import { SprintsModule } from './modules/sprints/sprints.module.js';
+import { CommentsModule } from './modules/comments/comments.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
 
@@ -63,6 +65,8 @@ import { WorkspacesModule } from './modules/workspaces/workspaces.module.js';
     WorkspacesModule,
     ProjectsModule,
     IssuesModule,
+    SprintsModule,
+    CommentsModule,
     HealthModule,
   ],
   providers: [

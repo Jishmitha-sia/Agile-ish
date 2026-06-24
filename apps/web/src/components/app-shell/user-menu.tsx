@@ -42,7 +42,7 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          'flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'hover:bg-accent focus-visible:ring-ring flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2',
           collapsed && 'justify-center',
         )}
         aria-label="Open user menu"
@@ -53,10 +53,8 @@ export function UserMenu({ collapsed = false }: { collapsed?: boolean }) {
         </Avatar>
         {!collapsed ? (
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-medium leading-tight">
-              {user.displayName}
-            </div>
-            <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+            <div className="truncate text-sm font-medium leading-tight">{user.displayName}</div>
+            <div className="text-muted-foreground truncate text-xs">{user.email}</div>
           </div>
         ) : null}
       </DropdownMenuTrigger>

@@ -9,12 +9,13 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { SkipThrottle } from '@nestjs/throttler';
 
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-
 
 import { CurrentWorkspace } from './decorators/current-workspace.decorator.js';
 import { RequireRole } from './decorators/require-role.decorator.js';
@@ -29,7 +30,7 @@ import { WorkspaceInvitationsService } from './services/workspace-invitations.se
 import { WorkspaceMembersService } from './services/workspace-members.service.js';
 import { WorkspacesService } from './workspaces.service.js';
 
-import type { RequestUser , RequestWorkspaceContext } from '../../common/types/auth.types.js';
+import type { RequestUser, RequestWorkspaceContext } from '../../common/types/auth.types.js';
 
 @ApiTags('workspaces')
 @ApiBearerAuth()
@@ -107,7 +108,7 @@ export class WorkspacesController {
   @RequireRole('ADMIN')
   @Patch(':workspaceSlug/members/:userId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Change a member\'s role (ADMIN+)' })
+  @ApiOperation({ summary: "Change a member's role (ADMIN+)" })
   async changeRole(
     @CurrentUser() user: RequestUser,
     @CurrentWorkspace() ws: RequestWorkspaceContext,
@@ -151,5 +152,16 @@ export class WorkspacesController {
     @Param('invitationId') invitationId: string,
   ): Promise<void> {
     await this.invitations.revoke(user.id, ws.id, invitationId);
+  }
+
+  // ─── Search ───────────────────────────────────────────────────────────
+
+  @UseGuards(WorkspaceRoleGuard)
+  @Get(':workspaceSlug/search')
+  @SkipThrottle({ global: true, auth: true })
+  @ApiOperation({ summary: 'Full-text search across issues, projects, members (member)' })
+  async search(@CurrentWorkspace() ws: RequestWorkspaceContext, @Query('q') q: string) {
+    if (!q || q.trim().length < 1) return { results: [] };
+    return await this.workspaces.search(ws.id, ws.slug, q.trim());
   }
 }

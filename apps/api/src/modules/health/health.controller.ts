@@ -1,9 +1,5 @@
 import { Controller, Get } from '@nestjs/common';
-import {
-  HealthCheck,
-  HealthCheckService,
-  type HealthIndicatorResult,
-} from '@nestjs/terminus';
+import { HealthCheck, HealthCheckService, type HealthIndicatorResult } from '@nestjs/terminus';
 
 import { Public } from '../../common/decorators/public.decorator.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
@@ -43,20 +39,14 @@ export class HealthController {
   @Get('ready')
   @HealthCheck()
   ready() {
-    return this.health.check([
-      () => this.checkPrisma(),
-      () => this.checkRedis(),
-    ]);
+    return this.health.check([() => this.checkPrisma(), () => this.checkRedis()]);
   }
 
   @Public()
   @Get()
   @HealthCheck()
   deep() {
-    return this.health.check([
-      () => this.checkPrisma(),
-      () => this.checkRedis(),
-    ]);
+    return this.health.check([() => this.checkPrisma(), () => this.checkRedis()]);
   }
 
   private async checkPrisma(): Promise<HealthIndicatorResult> {

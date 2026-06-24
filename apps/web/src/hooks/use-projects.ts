@@ -5,11 +5,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getApiClient } from '../lib/api-client.js';
 import { useAuthStore } from '../stores/auth.store.js';
 
-import type {
-  CreateProjectRequest,
-  Project,
-  UpdateProjectRequest,
-} from '@agile-ish/contracts';
+import type { CreateProjectRequest, Project, UpdateProjectRequest } from '@agile-ish/contracts';
 
 /**
  * TanStack Query hooks for the projects surface.
@@ -36,9 +32,7 @@ export const useProjects = (workspaceSlug: string | undefined) => {
     queryKey: projectKeys.list(workspaceSlug ?? ''),
     enabled: status === 'authenticated' && Boolean(workspaceSlug),
     queryFn: async (): Promise<Project[]> => {
-      return await getApiClient().get<Project[]>(
-        `/workspaces/${workspaceSlug ?? ''}/projects`,
-      );
+      return await getApiClient().get<Project[]>(`/workspaces/${workspaceSlug ?? ''}/projects`);
     },
   });
 };
@@ -60,20 +54,13 @@ export const useCreateProject = (workspaceSlug: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateProjectRequest): Promise<Project> => {
-      return await getApiClient().post<Project>(
-        `/workspaces/${workspaceSlug}/projects`,
-        input,
-      );
+      return await getApiClient().post<Project>(`/workspaces/${workspaceSlug}/projects`, input);
     },
     onSuccess: (project) => {
-      queryClient.setQueryData<Project[] | undefined>(
-        projectKeys.list(workspaceSlug),
-        (prev) => (prev ? [project, ...prev] : [project]),
+      queryClient.setQueryData<Project[] | undefined>(projectKeys.list(workspaceSlug), (prev) =>
+        prev ? [project, ...prev] : [project],
       );
-      queryClient.setQueryData(
-        projectKeys.detail(workspaceSlug, project.slug),
-        project,
-      );
+      queryClient.setQueryData(projectKeys.detail(workspaceSlug, project.slug), project);
     },
   });
 };
@@ -98,17 +85,14 @@ export const useDeleteProject = (workspaceSlug: string, projectSlug: string) => 
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await getApiClient().delete<void>(
-        `/workspaces/${workspaceSlug}/projects/${projectSlug}`,
-      );
+      await getApiClient().delete<void>(`/workspaces/${workspaceSlug}/projects/${projectSlug}`);
     },
     onSuccess: () => {
       queryClient.removeQueries({
         queryKey: projectKeys.detail(workspaceSlug, projectSlug),
       });
-      queryClient.setQueryData<Project[] | undefined>(
-        projectKeys.list(workspaceSlug),
-        (prev) => prev?.filter((p) => p.slug !== projectSlug),
+      queryClient.setQueryData<Project[] | undefined>(projectKeys.list(workspaceSlug), (prev) =>
+        prev?.filter((p) => p.slug !== projectSlug),
       );
     },
   });

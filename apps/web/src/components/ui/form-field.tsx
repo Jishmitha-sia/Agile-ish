@@ -1,7 +1,6 @@
 import { cn } from '@agile-ish/ui';
 import { cloneElement, type ReactElement, type ReactNode } from 'react';
 
-
 import { Label } from './label.js';
 
 /**
@@ -27,7 +26,14 @@ interface FormFieldProps {
   className?: string | undefined;
 }
 
-export const FormField = ({ id, label, helperText, error, children, className }: FormFieldProps) => {
+export const FormField = ({
+  id,
+  label,
+  helperText,
+  error,
+  children,
+  className,
+}: FormFieldProps) => {
   const describedBy: string[] = [];
   if (error) describedBy.push(`${id}-error`);
   else if (helperText) describedBy.push(`${id}-helper`);
@@ -67,10 +73,7 @@ const FieldMessage = ({
 }) => (
   <p
     id={id}
-    className={cn(
-      'text-xs',
-      tone === 'error' ? 'text-destructive' : 'text-muted-foreground',
-    )}
+    className={cn('text-xs', tone === 'error' ? 'text-destructive' : 'text-muted-foreground')}
   >
     {children}
   </p>

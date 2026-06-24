@@ -7,7 +7,6 @@ import { RootProvider } from '../providers/root-provider.js';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
 
-
 const sans = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
@@ -40,7 +39,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${sans.variable} ${mono.variable}`}>
-      <body className="min-h-screen bg-background font-sans text-foreground">
+      <body className="bg-background text-foreground min-h-screen font-sans">
         <RootProvider>{children}</RootProvider>
       </body>
     </html>

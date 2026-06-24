@@ -92,9 +92,7 @@ export function CreateIssueDialog({
         ...(values.type ? { type: values.type } : {}),
         ...(values.status ? { status: values.status } : {}),
         ...(values.priority ? { priority: values.priority } : {}),
-        ...(values.assigneeUserId !== undefined
-          ? { assigneeUserId: values.assigneeUserId }
-          : {}),
+        ...(values.assigneeUserId !== undefined ? { assigneeUserId: values.assigneeUserId } : {}),
       };
       const issue = await create.mutateAsync(payload);
       toast.success(`Created ${issue.identifier}`);
@@ -153,11 +151,7 @@ export function CreateIssueDialog({
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4" noValidate>
           <FormField id="title" label="Title" error={errors.title?.message}>
-            <Input
-              autoFocus
-              placeholder="Wire up the login form"
-              {...register('title')}
-            />
+            <Input autoFocus placeholder="Wire up the login form" {...register('title')} />
           </FormField>
           <FormField
             id="description"
@@ -199,11 +193,7 @@ export function CreateIssueDialog({
                 ))}
               </select>
             </FormField>
-            <FormField
-              id="assigneeUserId"
-              label="Assignee"
-              error={errors.assigneeUserId?.message}
-            >
+            <FormField id="assigneeUserId" label="Assignee" error={errors.assigneeUserId?.message}>
               <select
                 {...register('assigneeUserId', {
                   setValueAs: (v: string | null) => (v === '' || v === null ? null : v),

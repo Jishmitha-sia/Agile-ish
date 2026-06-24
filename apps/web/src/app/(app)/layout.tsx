@@ -31,7 +31,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   if (status !== 'authenticated') {
     return (
       <div className="grid min-h-screen place-items-center">
-        <Spinner className="size-6 text-muted-foreground" />
+        <Spinner className="text-muted-foreground size-6" />
       </div>
     );
   }

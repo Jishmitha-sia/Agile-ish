@@ -21,9 +21,7 @@ export const APP_CONFIG = 'app';
       isGlobal: true,
       cache: true,
       ignoreEnvFile: true, // .env loading is handled by docker compose / process manager
-      load: [
-        (): { [APP_CONFIG]: AppConfig } => ({ [APP_CONFIG]: buildAppConfig(parseEnv()) }),
-      ],
+      load: [(): { [APP_CONFIG]: AppConfig } => ({ [APP_CONFIG]: buildAppConfig(parseEnv()) })],
     }),
   ],
   exports: [NestConfigModule],

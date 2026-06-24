@@ -9,7 +9,6 @@ import 'reflect-metadata';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 
-
 import { AppModule } from './app.module.js';
 import { applyBootstrap, nestLogLevels } from './bootstrap.js';
 import { getAppConfig } from './config/config.module.js';

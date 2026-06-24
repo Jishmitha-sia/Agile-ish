@@ -61,11 +61,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit(): Promise<void> {
-    await Promise.all([
-      this.client.ping(),
-      this.publisher.ping(),
-      this.subscriber.ping(),
-    ]);
+    await Promise.all([this.client.ping(), this.publisher.ping(), this.subscriber.ping()]);
     this.logger.log('Redis connected (client + publisher + subscriber)');
   }
 

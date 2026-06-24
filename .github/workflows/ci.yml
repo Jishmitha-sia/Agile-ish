@@ -103,16 +103,16 @@ jobs:
       API_URL: http://localhost:4000
       CORS_ORIGINS: http://localhost:3000
       COOKIE_DOMAIN: localhost
-      COOKIE_SECURE: "false"
+      COOKIE_SECURE: 'false'
       COOKIE_SAMESITE: lax
       REFRESH_COOKIE_NAME: agile_rt
       JWT_ISSUER: agile-ish-ci
       JWT_AUDIENCE: agile-ish-web
       SMTP_HOST: localhost
-      SMTP_PORT: "1025"
-      MAIL_FROM: "ci@agile-ish.local"
+      SMTP_PORT: '1025'
+      MAIL_FROM: 'ci@agile-ish.local'
       LOG_LEVEL: warn
-      LOG_PRETTY: "false"
+      LOG_PRETTY: 'false'
       NODE_ENV: test
 
     steps:

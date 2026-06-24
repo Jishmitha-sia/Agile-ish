@@ -4,3 +4,6 @@ export * from './user.js';
 export * from './workspace.js';
 export * from './project.js';
 export * from './issue.js';
+export * from './sprint.js';
+export * from './comment.js';
+export * from './search.js';

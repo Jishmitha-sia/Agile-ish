@@ -49,9 +49,7 @@ export default function ProjectSettingsPage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const membership = user?.memberships.find((m) => m.workspaceSlug === workspaceSlug);
-  const canEdit = membership
-    ? membership.role === 'OWNER' || membership.role === 'ADMIN'
-    : false;
+  const canEdit = membership ? membership.role === 'OWNER' || membership.role === 'ADMIN' : false;
 
   const { data: project, isLoading } = useProject(workspaceSlug, projectSlug);
   const update = useUpdateProject(workspaceSlug, projectSlug);
@@ -115,7 +113,7 @@ export default function ProjectSettingsPage() {
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-2xl space-y-10">
           {isLoading || !project ? (
-            <Spinner className="size-5 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-5" />
           ) : (
             <>
               <SectionHeader
@@ -177,7 +175,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
   return (
     <div className="space-y-1">
       <h2 className="text-base font-semibold leading-tight">{title}</h2>
-      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+      {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
     </div>
   );
 }
@@ -205,18 +203,16 @@ function DeleteProjectCard({
       setOpen(false);
       onDeleted();
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : 'Could not delete the project.';
+      const message = err instanceof ApiError ? err.message : 'Could not delete the project.';
       toast.error(message);
     }
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-destructive/40 bg-destructive/5 p-6">
-      <p className="text-sm text-muted-foreground">
-        Deleting <span className="font-semibold text-foreground">{projectName}</span> is
-        reversible by an admin within 30 days. The issue prefix stays reserved within
-        this workspace.
+    <div className="border-destructive/40 bg-destructive/5 space-y-4 rounded-lg border p-6">
+      <p className="text-muted-foreground text-sm">
+        Deleting <span className="text-foreground font-semibold">{projectName}</span> is reversible
+        by an admin within 30 days. The issue prefix stays reserved within this workspace.
       </p>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
@@ -228,9 +224,7 @@ function DeleteProjectCard({
           <DialogHeader>
             <DialogTitle>Delete {projectName}?</DialogTitle>
             <DialogDescription>
-              Type{' '}
-              <span className="font-mono text-foreground">{projectName}</span> to
-              confirm.
+              Type <span className="text-foreground font-mono">{projectName}</span> to confirm.
             </DialogDescription>
           </DialogHeader>
           <Input

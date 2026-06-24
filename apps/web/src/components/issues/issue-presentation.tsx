@@ -70,13 +70,7 @@ export function statusLabel(s: IssueStatus): string {
   return STATUS_LABEL[s];
 }
 
-export function StatusIcon({
-  status,
-  className,
-}: {
-  status: IssueStatus;
-  className?: string;
-}) {
+export function StatusIcon({ status, className }: { status: IssueStatus; className?: string }) {
   const Icon = STATUS_ICON[status];
   return <Icon className={cn('size-4 shrink-0', STATUS_TONE[status], className)} />;
 }
@@ -136,6 +130,15 @@ export function PriorityIcon({
   return <Icon className={cn('size-4 shrink-0', PRIORITY_TONE[priority], className)} />;
 }
 
+export function PriorityBadge({ priority }: { priority: IssuePriority }) {
+  return (
+    <span className={cn('inline-flex items-center gap-1 text-xs font-medium', PRIORITY_TONE[priority])}>
+      <PriorityIcon priority={priority} className="size-3" />
+      {PRIORITY_LABEL[priority]}
+    </span>
+  );
+}
+
 // ─── Type ────────────────────────────────────────────────────────────────
 
 const TYPE_LABEL: Record<IssueType, string> = {
@@ -170,13 +173,7 @@ export function typeLabel(t: IssueType): string {
   return TYPE_LABEL[t];
 }
 
-export function TypeIcon({
-  type,
-  className,
-}: {
-  type: IssueType;
-  className?: string;
-}) {
+export function TypeIcon({ type, className }: { type: IssueType; className?: string }) {
   const Icon = TYPE_ICON[type];
   return (
     <Icon
@@ -210,10 +207,10 @@ export function TypeBadge({ type }: { type: IssueType }) {
  */
 export function MarkdownBody({ children }: { children: string | null | undefined }) {
   if (!children?.trim()) {
-    return <p className="text-sm text-muted-foreground/70">No description.</p>;
+    return <p className="text-muted-foreground/70 text-sm">No description.</p>;
   }
   return (
-    <div className="prose prose-sm prose-invert max-w-none prose-headings:font-semibold prose-a:text-primary prose-code:bg-muted prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none">
+    <div className="prose prose-sm prose-invert prose-headings:font-semibold prose-a:text-primary prose-code:bg-muted prose-code:rounded prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none max-w-none">
       <ReactMarkdown remarkPlugins={[remarkGfm]}>{children}</ReactMarkdown>
     </div>
   );
@@ -223,7 +220,7 @@ export function MarkdownBody({ children }: { children: string | null | undefined
 
 export function IssueIdentifier({ identifier }: { identifier: string }) {
   return (
-    <span className="font-mono text-xs uppercase tracking-wide text-muted-foreground">
+    <span className="text-muted-foreground font-mono text-xs uppercase tracking-wide">
       {identifier}
     </span>
   );
@@ -244,18 +241,10 @@ export function dueDateLabel(iso: string | null): { label: string; tone: string 
 /**
  * Compact label-value row used by the detail page sidebar.
  */
-export function SidebarField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+export function SidebarField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[80px_1fr] items-center gap-2">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+      <span className="text-muted-foreground text-xs uppercase tracking-wide">{label}</span>
       <div className="min-w-0 text-sm">{children}</div>
     </div>
   );

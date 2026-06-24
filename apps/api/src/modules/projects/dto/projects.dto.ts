@@ -1,8 +1,4 @@
-import {
-  CreateProjectRequest,
-  Project,
-  UpdateProjectRequest,
-} from '@agile-ish/contracts';
+import { CreateProjectRequest, Project, UpdateProjectRequest } from '@agile-ish/contracts';
 import { createZodDto } from 'nestjs-zod';
 
 export class CreateProjectDto extends createZodDto(CreateProjectRequest) {}

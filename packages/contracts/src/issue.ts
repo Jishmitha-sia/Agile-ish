@@ -50,12 +50,7 @@ export const ISSUE_PRIORITY_ORDER: readonly IssuePriority[] = [
 export const IssueType = z.enum(['BUG', 'FEATURE', 'CHORE', 'TASK']);
 export type IssueType = z.infer<typeof IssueType>;
 
-export const ISSUE_TYPE_ORDER: readonly IssueType[] = [
-  'FEATURE',
-  'BUG',
-  'CHORE',
-  'TASK',
-];
+export const ISSUE_TYPE_ORDER: readonly IssueType[] = ['FEATURE', 'BUG', 'CHORE', 'TASK'];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Issue DTO — what crosses the wire. `identifier` is the human-readable
@@ -82,6 +77,7 @@ export const Issue = z.object({
   type: IssueType,
   status: IssueStatus,
   priority: IssuePriority,
+  sprintId: z.string().cuid().nullable(),
   assignee: IssueUserSummary.nullable(),
   createdBy: IssueUserSummary.nullable(),
   dueDate: z.string().datetime().nullable(),
@@ -97,9 +93,9 @@ export type Issue = z.infer<typeof Issue>;
 export const CreateIssueRequest = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().max(20_000).optional(),
-  type: IssueType.optional(),           // defaults to TASK server-side
-  status: IssueStatus.optional(),       // defaults to BACKLOG server-side
-  priority: IssuePriority.optional(),   // defaults to NONE server-side
+  type: IssueType.optional(), // defaults to TASK server-side
+  status: IssueStatus.optional(), // defaults to BACKLOG server-side
+  priority: IssuePriority.optional(), // defaults to NONE server-side
   assigneeUserId: UserId.nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),
 });
@@ -111,6 +107,7 @@ export const UpdateIssueRequest = z.object({
   type: IssueType.optional(),
   status: IssueStatus.optional(),
   priority: IssuePriority.optional(),
+  sprintId: z.string().cuid().nullable().optional(),
   assigneeUserId: UserId.nullable().optional(),
   dueDate: z.string().datetime().nullable().optional(),
 });

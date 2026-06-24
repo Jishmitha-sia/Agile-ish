@@ -1,18 +1,9 @@
-import {
-  BadRequestException,
-  Controller,
-  Get,
-  Inject,
-  Req,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { BadRequestException, Controller, Get, Inject, Req, Res, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SkipThrottle } from '@nestjs/throttler';
 import { OAuthProvider } from '@prisma/client';
-
 
 import { Public } from '../../common/decorators/public.decorator.js';
 import { getAppConfig } from '../../config/config.module.js';

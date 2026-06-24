@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  Logger,
-  type OnModuleDestroy,
-  type OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma, PrismaClient } from '@prisma/client';
 
@@ -45,7 +40,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     super({
       datasources: { db: { url: cfg.database.url } },
       log: cfg.runtime.isProduction
-        ? [{ level: 'error', emit: 'event' }, { level: 'warn', emit: 'event' }]
+        ? [
+            { level: 'error', emit: 'event' },
+            { level: 'warn', emit: 'event' },
+          ]
         : [
             { level: 'error', emit: 'event' },
             { level: 'warn', emit: 'event' },

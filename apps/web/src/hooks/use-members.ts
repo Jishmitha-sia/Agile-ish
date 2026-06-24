@@ -67,16 +67,12 @@ export const useChangeMemberRole = (workspaceSlug: string, userId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: ChangeMemberRoleRequest): Promise<void> => {
-      await getApiClient().patch<void>(
-        `/workspaces/${workspaceSlug}/members/${userId}`,
-        input,
-      );
+      await getApiClient().patch<void>(`/workspaces/${workspaceSlug}/members/${userId}`, input);
     },
     onSuccess: (_, input) => {
       queryClient.setQueryData<WorkspaceMember[] | undefined>(
         memberKeys.list(workspaceSlug),
-        (prev) =>
-          prev?.map((m) => (m.userId === userId ? { ...m, role: input.role } : m)),
+        (prev) => prev?.map((m) => (m.userId === userId ? { ...m, role: input.role } : m)),
       );
     },
   });
@@ -86,9 +82,7 @@ export const useRemoveMember = (workspaceSlug: string, userId: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await getApiClient().delete<void>(
-        `/workspaces/${workspaceSlug}/members/${userId}`,
-      );
+      await getApiClient().delete<void>(`/workspaces/${workspaceSlug}/members/${userId}`);
     },
     onSuccess: () => {
       queryClient.setQueryData<WorkspaceMember[] | undefined>(

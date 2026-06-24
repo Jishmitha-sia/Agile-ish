@@ -24,14 +24,14 @@ export function TopBar({
   return (
     <header
       className={cn(
-        'flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border bg-background/95 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/70',
+        'border-border bg-background/95 supports-[backdrop-filter]:bg-background/70 flex h-14 shrink-0 items-center justify-between gap-3 border-b px-6 backdrop-blur',
         className,
       )}
     >
       <div className="min-w-0">
         <h1 className="truncate text-base font-semibold leading-tight">{title}</h1>
         {description ? (
-          <p className="truncate text-xs text-muted-foreground">{description}</p>
+          <p className="text-muted-foreground truncate text-xs">{description}</p>
         ) : null}
       </div>
       {actions ? <div className="flex items-center gap-2">{actions}</div> : null}

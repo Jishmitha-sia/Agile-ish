@@ -25,11 +25,11 @@ export default function GlobalError({
     <div className="grid min-h-screen place-items-center px-6">
       <div className="max-w-sm space-y-4 text-center">
         <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           We couldn&apos;t render this page. The error has been logged.
         </p>
         {error.digest ? (
-          <p className="font-mono text-xs text-muted-foreground/70">ref: {error.digest}</p>
+          <p className="text-muted-foreground/70 font-mono text-xs">ref: {error.digest}</p>
         ) : null}
         <Button onClick={() => reset()} className="w-full">
           Try again

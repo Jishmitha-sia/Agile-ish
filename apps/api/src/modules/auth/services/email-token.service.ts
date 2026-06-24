@@ -34,10 +34,10 @@ export interface IssuedToken {
 
 export type ConsumeOutcome =
   | { kind: 'consumed'; userId: string; tokenId: string }
-  | { kind: 'invalid' }      // token never existed
+  | { kind: 'invalid' } // token never existed
   | { kind: 'expired'; userId: string }
   | { kind: 'already_used'; userId: string }
-  | { kind: 'wrong_kind' };  // someone tried to use a reset token as a verification token
+  | { kind: 'wrong_kind' }; // someone tried to use a reset token as a verification token
 
 @Injectable()
 export class EmailTokenService {
@@ -63,7 +63,10 @@ export class EmailTokenService {
         },
       });
     } catch (err) {
-      this.logger.warn({ err, userId: input.userId, kind: input.kind }, 'Stale token cleanup failed');
+      this.logger.warn(
+        { err, userId: input.userId, kind: input.kind },
+        'Stale token cleanup failed',
+      );
     }
 
     const row = await this.prisma.emailToken.create({

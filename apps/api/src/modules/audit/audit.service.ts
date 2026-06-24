@@ -5,7 +5,6 @@ import { PrismaService } from '../../infra/prisma/prisma.service.js';
 
 import type { AuditAction } from '@agile-ish/contracts';
 
-
 /**
  * Append-only audit log writer.
  *

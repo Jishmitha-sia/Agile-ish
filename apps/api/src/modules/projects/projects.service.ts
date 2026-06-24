@@ -7,10 +7,7 @@ import {
   type UserId,
   type WorkspaceId,
 } from '@agile-ish/contracts';
-import {
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { EventBus } from '../../infra/events/events.module.js';
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
@@ -53,11 +50,7 @@ export class ProjectsService {
 
     const project = await this.prisma.$transaction(async (tx) => {
       const slug = await findAvailableProjectSlug(tx, workspaceId, baseSlug);
-      const identifierPrefix = await findAvailableIdentifierPrefix(
-        tx,
-        workspaceId,
-        basePrefix,
-      );
+      const identifierPrefix = await findAvailableIdentifierPrefix(tx, workspaceId, basePrefix);
       return await tx.project.create({
         data: {
           workspaceId,
@@ -148,9 +141,7 @@ export class ProjectsService {
       where: { id: projectId },
       data: { deletedAt: new Date() },
     });
-    await this.events.publish(
-      new ProjectDeletedEvent({ projectId, workspaceId, actorId }),
-    );
+    await this.events.publish(new ProjectDeletedEvent({ projectId, workspaceId, actorId }));
   }
 
   // ─── helpers ─────────────────────────────────────────────────────────────

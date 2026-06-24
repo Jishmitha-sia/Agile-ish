@@ -6,12 +6,7 @@ import {
   type UserId,
   type WorkspaceId,
 } from '@agile-ish/contracts';
-import {
-  ConflictException,
-  Injectable,
-  Logger,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { RefreshTokenRevocationReason } from '@prisma/client';
 
 import { EventBus } from '../../infra/events/events.module.js';
@@ -149,7 +144,8 @@ export class AuthService {
     const upgradedHash = await this.passwords.verifyAndUpgrade(user.passwordHash, input.password);
     // verifyAndUpgrade returns null on either "verification failed" OR
     // "verification succeeded, no upgrade needed". Disambiguate:
-    const ok = upgradedHash !== null || (await this.passwords.verify(user.passwordHash, input.password));
+    const ok =
+      upgradedHash !== null || (await this.passwords.verify(user.passwordHash, input.password));
     if (!ok) {
       await this.events.publish(
         new LoginFailedEvent({
@@ -176,10 +172,7 @@ export class AuthService {
     return await this.issueSession(user.id, ctx);
   }
 
-  async refresh(
-    presentedRaw: string,
-    ctx: AuthFlowContext = {},
-  ): Promise<SignupOrLoginResult> {
+  async refresh(presentedRaw: string, ctx: AuthFlowContext = {}): Promise<SignupOrLoginResult> {
     const result = await this.refreshTokens.rotate({
       presentedRaw,
       ...(ctx.userAgent ? { userAgent: ctx.userAgent } : {}),
@@ -206,7 +199,11 @@ export class AuthService {
       });
     }
 
-    return await this.assembleSession(result.userId, result.result.secret.raw, result.result.tokenId);
+    return await this.assembleSession(
+      result.userId,
+      result.result.secret.raw,
+      result.result.tokenId,
+    );
   }
 
   async logout(refreshRaw: string | undefined, userId: string): Promise<void> {

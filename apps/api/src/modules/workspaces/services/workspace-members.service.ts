@@ -168,7 +168,7 @@ export class WorkspaceMembersService {
     if (!target) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Member not found' });
     }
-    if ((target.role) === 'OWNER') {
+    if (target.role === 'OWNER') {
       throw new ForbiddenException({
         code: 'FORBIDDEN',
         message: 'Cannot change the OWNER role here',
@@ -206,7 +206,7 @@ export class WorkspaceMembersService {
     if (!target) {
       throw new NotFoundException({ code: 'NOT_FOUND', message: 'Member not found' });
     }
-    if ((target.role) === 'OWNER') {
+    if (target.role === 'OWNER') {
       const ownerCount = await this.prisma.workspaceMember.count({
         where: { workspaceId, role: 'OWNER' },
       });

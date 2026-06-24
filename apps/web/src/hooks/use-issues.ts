@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { getApiClient } from '../lib/api-client.js';
 import { useAuthStore } from '../stores/auth.store.js';
+import { sprintKeys } from './use-sprints.js';
 
 import type {
   CreateIssueRequest,
@@ -41,8 +42,7 @@ export const useIssues = (
   const status = useAuthStore((s) => s.status);
   return useQuery({
     queryKey: issueKeys.list(workspaceSlug ?? '', projectSlug ?? '', query),
-    enabled:
-      status === 'authenticated' && Boolean(workspaceSlug) && Boolean(projectSlug),
+    enabled: status === 'authenticated' && Boolean(workspaceSlug) && Boolean(projectSlug),
     queryFn: async (): Promise<Issue[]> => {
       const qs = new URLSearchParams();
       if (query?.status) qs.set('status', query.status);
@@ -117,10 +117,7 @@ export const useCreateIssue = (workspaceSlug: string, projectSlug: string) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateIssueRequest): Promise<Issue> => {
-      return await getApiClient().post<Issue>(
-        issuesBasePath(workspaceSlug, projectSlug),
-        input,
-      );
+      return await getApiClient().post<Issue>(issuesBasePath(workspaceSlug, projectSlug), input);
     },
     onSuccess: (issue) => {
       // Prepend to the no-filter list so the user sees the new issue
@@ -130,10 +127,7 @@ export const useCreateIssue = (workspaceSlug: string, projectSlug: string) => {
         (prev) => (prev ? [issue, ...prev] : [issue]),
       );
       // Seed the detail cache so clicking the new row is instant.
-      queryClient.setQueryData(
-        issueKeys.detail(workspaceSlug, projectSlug, issue.number),
-        issue,
-      );
+      queryClient.setQueryData(issueKeys.detail(workspaceSlug, projectSlug, issue.number), issue);
       // Filtered variants may or may not include the new issue (depends
       // on its default status vs the filter). Refetch them lazily so we
       // don't accidentally put a BACKLOG issue in the IN_PROGRESS list.
@@ -142,11 +136,7 @@ export const useCreateIssue = (workspaceSlug: string, projectSlug: string) => {
   });
 };
 
-export const useUpdateIssue = (
-  workspaceSlug: string,
-  projectSlug: string,
-  number: number,
-) => {
+export const useUpdateIssue = (workspaceSlug: string, projectSlug: string, number: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: UpdateIssueRequest): Promise<Issue> => {
@@ -177,19 +167,21 @@ export const useUpdateIssue = (
       queryClient.setQueryData<Issue[] | undefined>(
         noFilterListKey(workspaceSlug, projectSlug),
         (prev) =>
-          prev?.map((i): Issue =>
-            i.number === number
-              ? {
-                  ...i,
-                  // Only override fields that were actually provided in the patch.
-                  ...(input.title !== undefined ? { title: input.title } : {}),
-                  ...(input.description !== undefined ? { description: input.description } : {}),
-                  ...(input.status !== undefined ? { status: input.status } : {}),
-                  ...(input.priority !== undefined ? { priority: input.priority } : {}),
-                  ...(input.type !== undefined ? { type: input.type } : {}),
-                  ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
-                }
-              : i,
+          prev?.map(
+            (i): Issue =>
+              i.number === number
+                ? {
+                    ...i,
+                    // Only override fields that were actually provided in the patch.
+                    ...(input.title !== undefined ? { title: input.title } : {}),
+                    ...(input.description !== undefined ? { description: input.description } : {}),
+                    ...(input.status !== undefined ? { status: input.status } : {}),
+                    ...(input.priority !== undefined ? { priority: input.priority } : {}),
+                    ...(input.type !== undefined ? { type: input.type } : {}),
+                    ...(input.sprintId !== undefined ? { sprintId: input.sprintId } : {}),
+                    ...(input.dueDate !== undefined ? { dueDate: input.dueDate } : {}),
+                  }
+                : i,
           ),
       );
 
@@ -199,10 +191,7 @@ export const useUpdateIssue = (
     onSuccess: (updated) => {
       // Replace the optimistic row with the server-confirmed row (gets the
       // real updatedAt, identifier, etc.).
-      queryClient.setQueryData(
-        issueKeys.detail(workspaceSlug, projectSlug, number),
-        updated,
-      );
+      queryClient.setQueryData(issueKeys.detail(workspaceSlug, projectSlug, number), updated);
       queryClient.setQueryData<Issue[] | undefined>(
         noFilterListKey(workspaceSlug, projectSlug),
         (prev) => prev?.map((i) => (i.id === updated.id ? updated : i)),
@@ -212,10 +201,7 @@ export const useUpdateIssue = (
     onError: (_err, _input, context) => {
       // Roll back the optimistic change so the board snaps back.
       if (context?.snapshot !== undefined) {
-        queryClient.setQueryData(
-          noFilterListKey(workspaceSlug, projectSlug),
-          context.snapshot,
-        );
+        queryClient.setQueryData(noFilterListKey(workspaceSlug, projectSlug), context.snapshot);
       }
     },
 
@@ -223,21 +209,22 @@ export const useUpdateIssue = (
       // Always invalidate filtered variants (on success OR error) so any
       // status-filter views stay consistent with the server.
       invalidateFilteredLists(queryClient, workspaceSlug, projectSlug);
+      // Also invalidate sprint queries: the active-sprint kanban reads from
+      // sprintKeys.active, not from the issues list cache. Invalidating here
+      // ensures the sprint board re-fetches after a status/sprintId change.
+      void queryClient.invalidateQueries({
+        queryKey: sprintKeys.all,
+        refetchType: 'active',
+      });
     },
   });
 };
 
-export const useDeleteIssue = (
-  workspaceSlug: string,
-  projectSlug: string,
-  number: number,
-) => {
+export const useDeleteIssue = (workspaceSlug: string, projectSlug: string, number: number) => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (): Promise<void> => {
-      await getApiClient().delete<void>(
-        `${issuesBasePath(workspaceSlug, projectSlug)}/${number}`,
-      );
+      await getApiClient().delete<void>(`${issuesBasePath(workspaceSlug, projectSlug)}/${number}`);
     },
     onSuccess: () => {
       queryClient.removeQueries({

@@ -44,7 +44,7 @@ export function AssigneePicker({
     <DropdownMenu>
       <DropdownMenuTrigger
         disabled={disabled}
-        className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1 text-left text-sm transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-60"
+        className="hover:bg-accent flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1 text-left text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-60"
       >
         {value ? (
           <>
@@ -58,7 +58,7 @@ export function AssigneePicker({
           </>
         ) : (
           <>
-            <UserCircle2 className="size-5 text-muted-foreground" />
+            <UserCircle2 className="text-muted-foreground size-5" />
             <span className="text-muted-foreground">Unassigned</span>
           </>
         )}
@@ -68,7 +68,7 @@ export function AssigneePicker({
         <DropdownMenuItem onSelect={() => onChange(null)}>
           <UserX className="size-4" />
           <span>Unassigned</span>
-          {value === null ? <Check className="ml-auto size-4 text-primary" /> : null}
+          {value === null ? <Check className="text-primary ml-auto size-4" /> : null}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         {(members ?? []).map((m) => {
@@ -87,11 +87,9 @@ export function AssigneePicker({
               </Avatar>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{m.user.displayName}</div>
-                <div className="truncate text-[11px] text-muted-foreground">
-                  {m.user.email}
-                </div>
+                <div className="text-muted-foreground truncate text-[11px]">{m.user.email}</div>
               </div>
-              {isActive ? <Check className="size-4 shrink-0 text-primary" /> : null}
+              {isActive ? <Check className="text-primary size-4 shrink-0" /> : null}
             </DropdownMenuItem>
           );
         })}

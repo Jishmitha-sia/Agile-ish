@@ -30,12 +30,12 @@ services:
       # Surfaced to the init scripts in /docker-entrypoint-initdb.d.
       APP_USER_PASSWORD: ${APP_USER_PASSWORD}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
       interval: 5s
       timeout: 5s
       retries: 10
@@ -46,13 +46,13 @@ services:
     image: redis:7.2-alpine
     container_name: agile-ish-redis
     restart: unless-stopped
-    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    command: ['redis-server', '--save', '60', '1', '--loglevel', 'warning']
     ports:
-      - "6379:6379"
+      - '6379:6379'
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -64,17 +64,17 @@ services:
     container_name: agile-ish-mailhog
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - '1025:1025'
+      - '8025:8025'
 
   adminer:
     # Optional DB GUI. Enable with `--profile tools`.
     image: adminer:5
     container_name: agile-ish-adminer
-    profiles: ["tools"]
+    profiles: ['tools']
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - '8080:8080'
     environment:
       ADMINER_DEFAULT_SERVER: postgres
       ADMINER_DESIGN: dracula
@@ -85,13 +85,13 @@ services:
   # ───── Production-like containerised app stack (--profile full) ─────────
 
   api:
-    profiles: ["full"]
+    profiles: ['full']
     container_name: agile-ish-api
     build:
       context: ../..
       dockerfile: infra/docker/api.Dockerfile
       args:
-        NODE_VERSION: "22.13.0"
+        NODE_VERSION: '22.13.0'
     restart: unless-stopped
     env_file:
       - ../../.env
@@ -101,36 +101,42 @@ services:
       DIRECT_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
       REDIS_URL: redis://redis:6379
       SMTP_HOST: mailhog
-      SMTP_PORT: "1025"
+      SMTP_PORT: '1025'
       API_HOST: 0.0.0.0
     ports:
-      - "4000:4000"
+      - '4000:4000'
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:4000/health/live').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://localhost:4000/health/live').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
       interval: 10s
       timeout: 5s
       retries: 6
       start_period: 30s
 
   web:
-    profiles: ["full"]
+    profiles: ['full']
     container_name: agile-ish-web
     build:
       context: ../..
       dockerfile: infra/docker/web.Dockerfile
       args:
-        NODE_VERSION: "22.13.0"
+        NODE_VERSION: '22.13.0'
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
         NEXT_PUBLIC_REFRESH_COOKIE_NAME: ${REFRESH_COOKIE_NAME}
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - '3000:3000'
     environment:
       NODE_ENV: production
     depends_on:

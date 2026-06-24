@@ -15,12 +15,7 @@ export const PasswordSchema = z
   .refine((v) => /[A-Z]/.test(v), 'Must contain an uppercase letter')
   .refine((v) => /[0-9]/.test(v), 'Must contain a digit');
 
-export const EmailSchema = z
-  .string()
-  .trim()
-  .toLowerCase()
-  .email('Invalid email address')
-  .max(254);
+export const EmailSchema = z.string().trim().toLowerCase().email('Invalid email address').max(254);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Signup

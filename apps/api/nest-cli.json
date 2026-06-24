@@ -5,9 +5,7 @@
   "compilerOptions": {
     "deleteOutDir": true,
     "tsConfigPath": "tsconfig.build.json",
-    "assets": [
-      { "include": "**/*.hbs", "outDir": "dist/templates" }
-    ],
+    "assets": [{ "include": "**/*.hbs", "outDir": "dist/templates" }],
     "watchAssets": true
   }
 }

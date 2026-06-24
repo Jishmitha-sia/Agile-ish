@@ -9,7 +9,6 @@ import type {
   WorkspaceMembership,
 } from '@agile-ish/contracts';
 
-
 @Injectable()
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}

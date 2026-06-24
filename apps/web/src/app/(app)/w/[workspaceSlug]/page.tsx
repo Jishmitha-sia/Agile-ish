@@ -28,9 +28,7 @@ export default function WorkspaceHomePage() {
   const { data: projects, isLoading: projectsLoading } = useProjects(workspaceSlug);
   const user = useAuthStore((s) => s.user);
   const membership = user?.memberships.find((m) => m.workspaceSlug === workspaceSlug);
-  const canCreate = membership
-    ? membership.role === 'OWNER' || membership.role === 'ADMIN'
-    : false;
+  const canCreate = membership ? membership.role === 'OWNER' || membership.role === 'ADMIN' : false;
 
   return (
     <>
@@ -50,35 +48,33 @@ export default function WorkspaceHomePage() {
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-5xl space-y-10">
           {wsLoading ? (
-            <Spinner className="size-5 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-5" />
           ) : workspace ? (
             <section className="space-y-2">
-              <p className="font-mono text-xs uppercase tracking-wider text-muted-foreground">
+              <p className="text-muted-foreground font-mono text-xs uppercase tracking-wider">
                 {workspace.slug}
               </p>
               <h2 className="text-2xl font-semibold tracking-tight">{workspace.name}</h2>
               {workspace.description ? (
-                <p className="max-w-prose text-sm text-muted-foreground">
-                  {workspace.description}
-                </p>
+                <p className="text-muted-foreground max-w-prose text-sm">{workspace.description}</p>
               ) : null}
             </section>
           ) : null}
 
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-muted-foreground text-sm font-semibold uppercase tracking-wide">
                 Projects
               </h3>
               {projects?.length ? (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-muted-foreground text-xs">
                   {projects.length} {projects.length === 1 ? 'project' : 'projects'}
                 </span>
               ) : null}
             </div>
 
             {projectsLoading ? (
-              <Spinner className="size-5 text-muted-foreground" />
+              <Spinner className="text-muted-foreground size-5" />
             ) : !projects || projects.length === 0 ? (
               <EmptyProjects workspaceSlug={workspaceSlug} canCreate={canCreate} />
             ) : (
@@ -97,29 +93,23 @@ export default function WorkspaceHomePage() {
   );
 }
 
-function ProjectCard({
-  workspaceSlug,
-  project,
-}: {
-  workspaceSlug: string;
-  project: Project;
-}) {
+function ProjectCard({ workspaceSlug, project }: { workspaceSlug: string; project: Project }) {
   return (
     <Link
       href={`/w/${workspaceSlug}/projects/${project.slug}`}
-      className="group block space-y-2 rounded-lg border border-border bg-card p-5 transition-colors hover:border-foreground/30 hover:bg-card/70"
+      className="border-border bg-card hover:border-foreground/30 hover:bg-card/70 group block space-y-2 rounded-lg border p-5 transition-colors"
     >
       <div className="flex items-center gap-2">
-        <FolderKanban className="size-4 text-muted-foreground" />
-        <span className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground">
+        <FolderKanban className="text-muted-foreground size-4" />
+        <span className="text-muted-foreground font-mono text-[11px] uppercase tracking-wider">
           {project.identifierPrefix}
         </span>
       </div>
       <h4 className="text-base font-semibold leading-tight">{project.name}</h4>
       {project.description ? (
-        <p className="line-clamp-2 text-sm text-muted-foreground">{project.description}</p>
+        <p className="text-muted-foreground line-clamp-2 text-sm">{project.description}</p>
       ) : (
-        <p className="text-sm text-muted-foreground/60">No description yet.</p>
+        <p className="text-muted-foreground/60 text-sm">No description yet.</p>
       )}
     </Link>
   );
@@ -133,13 +123,13 @@ function EmptyProjects({
   canCreate: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border bg-card/40 px-6 py-12 text-center">
-      <div className="flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+    <div className="border-border bg-card/40 flex flex-col items-center gap-4 rounded-lg border border-dashed px-6 py-12 text-center">
+      <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
         <FolderKanban className="size-6" />
       </div>
       <div className="space-y-1">
         <h4 className="text-base font-semibold">No projects yet</h4>
-        <p className="max-w-sm text-sm text-muted-foreground">
+        <p className="text-muted-foreground max-w-sm text-sm">
           {canCreate
             ? 'Spin up your first project. Boards, sprints, and issues land here.'
             : 'Ask a workspace admin to create the first project.'}

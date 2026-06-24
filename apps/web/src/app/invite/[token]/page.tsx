@@ -16,10 +16,7 @@ import { FormField } from '../../../components/ui/form-field.js';
 import { Input } from '../../../components/ui/input.js';
 import { Spinner } from '../../../components/ui/spinner.js';
 import { useSignup } from '../../../hooks/use-auth.js';
-import {
-  useAcceptInvitation,
-  useInvitationLookup,
-} from '../../../hooks/use-invitations.js';
+import { useAcceptInvitation, useInvitationLookup } from '../../../hooks/use-invitations.js';
 import { ApiError } from '../../../lib/api-error.js';
 import { useAuthStore } from '../../../stores/auth.store.js';
 
@@ -56,13 +53,13 @@ export default function AcceptInvitePage() {
       <div className="w-full max-w-md space-y-6">
         {lookup.isLoading ? (
           <div className="grid place-items-center py-16">
-            <Spinner className="size-6 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-6" />
           </div>
         ) : lookup.error || !lookup.data ? (
           <InvalidInvitation error={lookup.error} />
         ) : status === 'initializing' ? (
           <div className="grid place-items-center py-16">
-            <Spinner className="size-6 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-6" />
           </div>
         ) : status === 'authenticated' && user ? (
           user.email.toLowerCase() === lookup.data.email.toLowerCase() ? (
@@ -82,26 +79,21 @@ export default function AcceptInvitePage() {
   );
 }
 
-function InvitationCard({
-  invitation,
-}: {
-  invitation: InvitationLookupResponse;
-}) {
+function InvitationCard({ invitation }: { invitation: InvitationLookupResponse }) {
   return (
-    <div className="space-y-2 rounded-lg border border-border bg-card p-5">
-      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <div className="border-border bg-card space-y-2 rounded-lg border p-5">
+      <p className="text-muted-foreground text-xs font-semibold uppercase tracking-wider">
         Workspace invitation
       </p>
-      <h1 className="text-xl font-semibold tracking-tight">
-        Join {invitation.workspace.name}
-      </h1>
-      <p className="text-sm text-muted-foreground">
+      <h1 className="text-xl font-semibold tracking-tight">Join {invitation.workspace.name}</h1>
+      <p className="text-muted-foreground text-sm">
         {invitation.inviterDisplayName
           ? `${invitation.inviterDisplayName} invited you`
           : "You've been invited"}{' '}
-        to join as a <span className="font-medium text-foreground">{invitation.role.toLowerCase()}</span>.
+        to join as a{' '}
+        <span className="text-foreground font-medium">{invitation.role.toLowerCase()}</span>.
       </p>
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         Invitation sent to <span className="font-mono">{invitation.email}</span>.
       </p>
     </div>
@@ -165,10 +157,11 @@ function EmailMismatch({
         <ShieldX className="size-5 text-amber-400" />
         <h1 className="text-base font-semibold">Wrong account</h1>
       </div>
-      <p className="text-sm text-muted-foreground">
-        This invitation was sent to <span className="font-mono text-foreground">{expectedEmail}</span>,
-        but you&apos;re signed in as <span className="font-mono text-foreground">{currentEmail}</span>.
-        Log out and sign in (or sign up) with the invited email to accept.
+      <p className="text-muted-foreground text-sm">
+        This invitation was sent to{' '}
+        <span className="text-foreground font-mono">{expectedEmail}</span>, but you&apos;re signed
+        in as <span className="text-foreground font-mono">{currentEmail}</span>. Log out and sign in
+        (or sign up) with the invited email to accept.
       </p>
       <div className="flex gap-2">
         <Button asChild variant="outline" className="flex-1">
@@ -246,7 +239,12 @@ function AcceptForGuest({
       <InvitationCard invitation={invitation} />
       <form className="space-y-4" onSubmit={onSubmit} noValidate>
         <FormField id="displayName" label="Display name" error={errors.displayName?.message}>
-          <Input autoFocus autoComplete="name" placeholder="Ada Lovelace" {...register('displayName')} />
+          <Input
+            autoFocus
+            autoComplete="name"
+            placeholder="Ada Lovelace"
+            {...register('displayName')}
+          />
         </FormField>
         <FormField id="email" label="Email">
           <Input value={invitation.email} disabled readOnly />
@@ -273,7 +271,7 @@ function AcceptForGuest({
           Create account and join
         </Button>
       </form>
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Already have an account?{' '}
         <Link href={loginHref} className="text-foreground underline-offset-4 hover:underline">
           Log in
@@ -289,13 +287,13 @@ function InvalidInvitation({ error }: { error: unknown }) {
       ? error.message
       : 'This invitation link is invalid, has been revoked, or has expired.';
   return (
-    <div className="space-y-4 rounded-lg border border-destructive/40 bg-destructive/5 p-5 text-center">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-destructive/15 text-destructive">
+    <div className="border-destructive/40 bg-destructive/5 space-y-4 rounded-lg border p-5 text-center">
+      <div className="bg-destructive/15 text-destructive mx-auto flex size-12 items-center justify-center rounded-full">
         <ShieldX className="size-6" />
       </div>
       <div className="space-y-1">
         <h1 className="text-base font-semibold">Invitation unavailable</h1>
-        <p className="text-sm text-muted-foreground">{message}</p>
+        <p className="text-muted-foreground text-sm">{message}</p>
       </div>
       <Button asChild variant="outline">
         <Link href="/">Go home</Link>

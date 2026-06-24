@@ -68,9 +68,7 @@ export class IssuesService {
           ...(input.type ? { type: input.type } : {}),
           ...(input.status ? { status: input.status } : {}),
           ...(input.priority ? { priority: input.priority } : {}),
-          ...(input.assigneeUserId !== undefined
-            ? { assigneeUserId: input.assigneeUserId }
-            : {}),
+          ...(input.assigneeUserId !== undefined ? { assigneeUserId: input.assigneeUserId } : {}),
           ...(input.dueDate !== undefined
             ? { dueDate: input.dueDate ? new Date(input.dueDate) : null }
             : {}),
@@ -101,10 +99,7 @@ export class IssuesService {
     return dto;
   }
 
-  async listByProject(
-    projectId: ProjectId,
-    query: ListIssuesQuery,
-  ): Promise<Issue[]> {
+  async listByProject(projectId: ProjectId, query: ListIssuesQuery): Promise<Issue[]> {
     const project = await this.prisma.project.findFirst({
       where: { id: projectId, deletedAt: null },
       select: { identifierPrefix: true },
@@ -175,9 +170,8 @@ export class IssuesService {
         ...(patch.type !== undefined ? { type: patch.type } : {}),
         ...(patch.status !== undefined ? { status: patch.status } : {}),
         ...(patch.priority !== undefined ? { priority: patch.priority } : {}),
-        ...(patch.assigneeUserId !== undefined
-          ? { assigneeUserId: patch.assigneeUserId }
-          : {}),
+        ...(patch.sprintId !== undefined ? { sprintId: patch.sprintId } : {}),
+        ...(patch.assigneeUserId !== undefined ? { assigneeUserId: patch.assigneeUserId } : {}),
         ...(patch.dueDate !== undefined
           ? { dueDate: patch.dueDate ? new Date(patch.dueDate) : null }
           : {}),
@@ -274,8 +268,14 @@ export class IssuesService {
       type: Issue['type'];
       status: Issue['status'];
       priority: Issue['priority'];
+      sprintId: string | null;
       assignee: { id: string; displayName: string; email: string; avatarUrl: string | null } | null;
-      createdBy: { id: string; displayName: string; email: string; avatarUrl: string | null } | null;
+      createdBy: {
+        id: string;
+        displayName: string;
+        email: string;
+        avatarUrl: string | null;
+      } | null;
       dueDate: Date | null;
       createdAt: Date;
       updatedAt: Date;
@@ -292,6 +292,7 @@ export class IssuesService {
       type: row.type,
       status: row.status,
       priority: row.priority,
+      sprintId: row.sprintId,
       assignee: row.assignee
         ? {
             id: row.assignee.id as UserId,

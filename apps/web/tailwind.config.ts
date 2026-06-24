@@ -12,10 +12,7 @@ import animate from 'tailwindcss-animate';
  */
 const config: Config = {
   darkMode: ['class', '[data-theme="dark"]'],
-  content: [
-    './src/**/*.{ts,tsx}',
-    '../../packages/ui/src/**/*.{ts,tsx}',
-  ],
+  content: ['./src/**/*.{ts,tsx}', '../../packages/ui/src/**/*.{ts,tsx}'],
   theme: {
     container: {
       center: true,

@@ -13,11 +13,7 @@ import { Throttle } from '@nestjs/throttler';
 
 import { Public } from '../../common/decorators/public.decorator.js';
 
-
-import {
-  ConfirmPasswordResetDto,
-  RequestPasswordResetDto,
-} from './dto/password-reset.dto.js';
+import { ConfirmPasswordResetDto, RequestPasswordResetDto } from './dto/password-reset.dto.js';
 import { PasswordResetService } from './services/password-reset.service.js';
 
 import type { AuthenticatedRequest } from '../../common/types/auth.types.js';

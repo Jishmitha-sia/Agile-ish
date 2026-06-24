@@ -92,9 +92,7 @@ function LoginForm() {
     <div className="space-y-6">
       <div className="space-y-2">
         <h1 className="text-2xl font-semibold tracking-tight">Log in</h1>
-        <p className="text-sm text-muted-foreground">
-          Welcome back. Sign in to your workspace.
-        </p>
+        <p className="text-muted-foreground text-sm">Welcome back. Sign in to your workspace.</p>
       </div>
 
       <OAuthButtons />
@@ -122,7 +120,7 @@ function LoginForm() {
         <div className="text-right">
           <Link
             href="/forgot-password"
-            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            className="text-muted-foreground hover:text-foreground text-xs underline-offset-4 hover:underline"
           >
             Forgot password?
           </Link>
@@ -134,7 +132,7 @@ function LoginForm() {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-muted-foreground">
+      <p className="text-muted-foreground text-center text-sm">
         Don&apos;t have an account?{' '}
         <Link href="/signup" className="text-foreground underline-offset-4 hover:underline">
           Sign up

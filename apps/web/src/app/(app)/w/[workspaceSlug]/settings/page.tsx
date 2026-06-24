@@ -107,7 +107,7 @@ export default function WorkspaceSettingsPage() {
       <main className="flex-1 overflow-y-auto px-8 py-10">
         <div className="mx-auto max-w-2xl space-y-10">
           {isLoading || !workspace ? (
-            <Spinner className="size-5 text-muted-foreground" />
+            <Spinner className="text-muted-foreground size-5" />
           ) : (
             <>
               <SectionHeader
@@ -116,11 +116,7 @@ export default function WorkspaceSettingsPage() {
               />
               <form onSubmit={onSubmit} className="space-y-6" noValidate>
                 <FormField id="name" label="Name" error={errors.name?.message}>
-                  <Input
-                    {...register('name')}
-                    disabled={!canEdit}
-                    placeholder="Acme Engineering"
-                  />
+                  <Input {...register('name')} disabled={!canEdit} placeholder="Acme Engineering" />
                 </FormField>
                 <FormField
                   id="description"
@@ -172,7 +168,7 @@ function SectionHeader({ title, description }: { title: string; description?: st
   return (
     <div className="space-y-1">
       <h2 className="text-base font-semibold leading-tight">{title}</h2>
-      {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
+      {description ? <p className="text-muted-foreground text-sm">{description}</p> : null}
     </div>
   );
 }
@@ -198,18 +194,17 @@ function DeleteWorkspaceCard({
       setOpen(false);
       onDeleted();
     } catch (err) {
-      const message =
-        err instanceof ApiError ? err.message : 'Could not delete the workspace.';
+      const message = err instanceof ApiError ? err.message : 'Could not delete the workspace.';
       toast.error(message);
     }
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-destructive/40 bg-destructive/5 p-6">
-      <p className="text-sm text-muted-foreground">
-        Deleting <span className="font-semibold text-foreground">{workspaceName}</span>{' '}
-        is reversible by an admin within 30 days. Projects, sprints, and issues are
-        hidden but not permanently destroyed.
+    <div className="border-destructive/40 bg-destructive/5 space-y-4 rounded-lg border p-6">
+      <p className="text-muted-foreground text-sm">
+        Deleting <span className="text-foreground font-semibold">{workspaceName}</span> is
+        reversible by an admin within 30 days. Projects, sprints, and issues are hidden but not
+        permanently destroyed.
       </p>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
@@ -221,10 +216,8 @@ function DeleteWorkspaceCard({
           <DialogHeader>
             <DialogTitle>Delete {workspaceName}?</DialogTitle>
             <DialogDescription>
-              This soft-deletes the workspace immediately and revokes access for
-              everyone. Type{' '}
-              <span className="font-mono text-foreground">{workspaceName}</span> to
-              confirm.
+              This soft-deletes the workspace immediately and revokes access for everyone. Type{' '}
+              <span className="text-foreground font-mono">{workspaceName}</span> to confirm.
             </DialogDescription>
           </DialogHeader>
           <Input

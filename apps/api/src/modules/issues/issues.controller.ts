@@ -1,6 +1,4 @@
-import {
-  ProjectSlug as ProjectSlugSchema,
-} from '@agile-ish/contracts';
+import { ProjectSlug as ProjectSlugSchema } from '@agile-ish/contracts';
 import {
   BadRequestException,
   Body,
@@ -27,10 +25,7 @@ import { WorkspaceRoleGuard } from '../workspaces/guards/workspace-role.guard.js
 import { CreateIssueDto, ListIssuesQueryDto, UpdateIssueDto } from './dto/issues.dto.js';
 import { IssuesService } from './issues.service.js';
 
-import type {
-  RequestUser,
-  RequestWorkspaceContext,
-} from '../../common/types/auth.types.js';
+import type { RequestUser, RequestWorkspaceContext } from '../../common/types/auth.types.js';
 
 /**
  * Issues are addressed under their parent project:
@@ -116,13 +111,7 @@ export class IssuesController {
     const number = this.parseIssueNumber(numberRaw);
     const project = await this.projects.getBySlug(ws.id, projectSlug);
     const issue = await this.issues.getByNumber(project.id, number);
-    return await this.issues.update(
-      user.id,
-      ws.id,
-      project.id,
-      issue.id,
-      body,
-    );
+    return await this.issues.update(user.id, ws.id, project.id, issue.id, body);
   }
 
   @RequireRole('ADMIN')
@@ -139,12 +128,7 @@ export class IssuesController {
     const number = this.parseIssueNumber(numberRaw);
     const project = await this.projects.getBySlug(ws.id, projectSlug);
     const issue = await this.issues.getByNumber(project.id, number);
-    await this.issues.deleteIssue(
-      user.id,
-      ws.id,
-      project.id,
-      issue.id,
-    );
+    await this.issues.deleteIssue(user.id, ws.id, project.id, issue.id);
   }
 
   private parseIssueNumber(raw: string): number {
