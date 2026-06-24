@@ -1,18 +1,18 @@
-import {
-  type CreateSprintRequest,
-  type ProjectId,
-  type Sprint,
-  type SprintStatus,
-  type SprintWithIssues,
-  type UpdateSprintRequest,
-  type WorkspaceId,
-} from '@agile-ish/contracts';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../infra/prisma/prisma.service.js';
 
-import type { Issue } from '@agile-ish/contracts';
-import type { UserId } from '@agile-ish/contracts';
+import type {
+  CreateSprintRequest,
+  Issue,
+  ProjectId,
+  Sprint,
+  SprintStatus,
+  SprintWithIssues,
+  UpdateSprintRequest,
+  UserId,
+  WorkspaceId,
+} from '@agile-ish/contracts';
 
 /**
  * SprintsService manages time-boxed iterations within a project.

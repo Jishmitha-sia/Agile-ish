@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 
 import { TopBar } from '../../../../../../../../components/app-shell/top-bar.js';
 import { AssigneePicker } from '../../../../../../../../components/issues/assignee-picker.js';
+import { CommentsSection } from '../../../../../../../../components/issues/comments-section.js';
 import {
   IssueIdentifier,
   MarkdownBody,
@@ -43,7 +44,6 @@ import {
 } from '../../../../../../../../hooks/use-issues.js';
 import { ApiError } from '../../../../../../../../lib/api-error.js';
 import { useAuthStore } from '../../../../../../../../stores/auth.store.js';
-import { CommentsSection } from '../../../../../../../../components/issues/comments-section.js';
 
 import type {
   Issue,

@@ -18,8 +18,8 @@ import { CurrentWorkspace } from '../workspaces/decorators/current-workspace.dec
 import { RequireRole } from '../workspaces/decorators/require-role.decorator.js';
 import { WorkspaceRoleGuard } from '../workspaces/guards/workspace-role.guard.js';
 
-import { CreateCommentDto, UpdateCommentDto } from './dto/comments.dto.js';
 import { CommentsService } from './comments.service.js';
+import { CreateCommentDto, UpdateCommentDto } from './dto/comments.dto.js';
 
 import type { RequestUser, RequestWorkspaceContext } from '../../common/types/auth.types.js';
 

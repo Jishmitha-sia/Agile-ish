@@ -1,21 +1,20 @@
 'use client';
 
 import { type IssueComment } from '@agile-ish/contracts';
-import { cn } from '@agile-ish/ui';
 import { formatDistanceToNow } from 'date-fns';
 import { MoreHorizontal, Pencil, Send, Trash2 } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { Avatar, AvatarFallback, AvatarImage, initialsOf } from '../ui/avatar.js';
-import { Button } from '../ui/button.js';
-import { useAuthStore } from '../../stores/auth.store.js';
 import {
   useComments,
   useCreateComment,
-  useUpdateComment,
   useDeleteComment,
+  useUpdateComment,
 } from '../../hooks/use-comments.js';
+import { useAuthStore } from '../../stores/auth.store.js';
+import { Avatar, AvatarFallback, AvatarImage, initialsOf } from '../ui/avatar.js';
+import { Button } from '../ui/button.js';
 import { Spinner } from '../ui/spinner.js';
 
 interface Props {
@@ -38,27 +37,31 @@ export function CommentsSection({ workspaceSlug, issueId }: Props) {
   const handleSubmit = async () => {
     const trimmed = body.trim();
     if (!trimmed) return;
-    await toast.promise(createComment.mutateAsync({ body: trimmed }), {
+    const p = createComment.mutateAsync({ body: trimmed });
+    void toast.promise(p, {
       loading: 'Posting…',
       success: 'Comment posted',
       error: 'Failed to post',
     });
+    await p.catch(() => null);
     setBody('');
   };
 
   const handleEditSave = async (commentId: string) => {
     const trimmed = editBody.trim();
     if (!trimmed) return;
-    await toast.promise(updateComment.mutateAsync({ commentId, patch: { body: trimmed } }), {
+    const p = updateComment.mutateAsync({ commentId, patch: { body: trimmed } });
+    void toast.promise(p, {
       loading: 'Saving…',
       success: 'Updated',
       error: 'Failed',
     });
+    await p.catch(() => null);
     setEditingId(null);
   };
 
-  const handleDelete = async (commentId: string) => {
-    await toast.promise(deleteComment.mutateAsync(commentId), {
+  const handleDelete = (commentId: string) => {
+    void toast.promise(deleteComment.mutateAsync(commentId), {
       loading: 'Deleting…',
       success: 'Deleted',
       error: 'Failed',

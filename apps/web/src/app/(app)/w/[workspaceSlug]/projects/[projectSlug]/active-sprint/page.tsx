@@ -1,15 +1,15 @@
 'use client';
 
-import { useParams } from 'next/navigation';
-import Link from 'next/link';
 import { LayoutList } from 'lucide-react';
+import Link from 'next/link';
+import { useParams } from 'next/navigation';
 
 import { TopBar } from '../../../../../../../components/app-shell/top-bar.js';
 import { KanbanBoard } from '../../../../../../../components/issues/kanban-board.js';
 import { Button } from '../../../../../../../components/ui/button.js';
 import { Spinner } from '../../../../../../../components/ui/spinner.js';
-import { useActiveSprint } from '../../../../../../../hooks/use-sprints.js';
 import { useProject } from '../../../../../../../hooks/use-projects.js';
+import { useActiveSprint } from '../../../../../../../hooks/use-sprints.js';
 
 export default function ActiveSprintPage() {
   const params = useParams<{ workspaceSlug: string; projectSlug: string }>();

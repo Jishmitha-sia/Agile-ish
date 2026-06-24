@@ -1,6 +1,6 @@
-import { z } from 'zod';
-import { createZodDto } from 'nestjs-zod';
 import { CreateSprintRequest, UpdateSprintRequest } from '@agile-ish/contracts';
+import { createZodDto } from 'nestjs-zod';
+import { z } from 'zod';
 
 export class CreateSprintDto extends createZodDto(CreateSprintRequest) {}
 export class UpdateSprintDto extends createZodDto(UpdateSprintRequest) {}

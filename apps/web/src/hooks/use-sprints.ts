@@ -37,8 +37,7 @@ export const useSprints = (
     queryFn: async (): Promise<Sprint[]> => {
       const api = getApiClient();
       const qs = includeCompleted ? '?includeCompleted=true' : '';
-      const res = await api.get(`${sprintsPath(workspaceSlug!, projectSlug!)}${qs}`);
-      return res as Sprint[];
+      return await api.get<Sprint[]>(`${sprintsPath(workspaceSlug ?? '', projectSlug ?? '')}${qs}`);
     },
   });
 };
@@ -53,8 +52,7 @@ export const useActiveSprint = (
     enabled: status === 'authenticated' && Boolean(workspaceSlug) && Boolean(projectSlug),
     queryFn: async (): Promise<SprintWithIssues | null> => {
       const api = getApiClient();
-      const res = await api.get(`${sprintsPath(workspaceSlug!, projectSlug!)}/active`);
-      return res as SprintWithIssues | null;
+      return await api.get<SprintWithIssues | null>(`${sprintsPath(workspaceSlug ?? '', projectSlug ?? '')}/active`);
     },
   });
 };
@@ -64,7 +62,7 @@ export const useCreateSprint = (workspaceSlug: string, projectSlug: string) => {
   return useMutation({
     mutationFn: async (input: CreateSprintRequest) => {
       const api = getApiClient();
-      return (await api.post(sprintsPath(workspaceSlug, projectSlug), input)) as Sprint;
+      return await api.post<Sprint>(sprintsPath(workspaceSlug, projectSlug), input);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: sprintKeys.list(workspaceSlug, projectSlug) });
@@ -77,7 +75,7 @@ export const useUpdateSprint = (workspaceSlug: string, projectSlug: string) => {
   return useMutation({
     mutationFn: async ({ sprintId, patch }: { sprintId: string; patch: UpdateSprintRequest }) => {
       const api = getApiClient();
-      return (await api.patch(`${sprintsPath(workspaceSlug, projectSlug)}/${sprintId}`, patch)) as Sprint;
+      return await api.patch<Sprint>(`${sprintsPath(workspaceSlug, projectSlug)}/${sprintId}`, patch);
     },
     onSuccess: () => {
       // refetchType:'active' forces mounted queries to re-fetch immediately

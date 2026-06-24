@@ -6,7 +6,6 @@ import {
   ChevronDown,
   ChevronRight,
   Flag,
-  MoreHorizontal,
   Play,
   Plus,
   Trash2,
@@ -68,17 +67,19 @@ export default function BacklogPage() {
 
   const handleCreateSprint = async () => {
     if (!newSprintName.trim()) return;
-    await toast.promise(createSprint.mutateAsync({ name: newSprintName.trim() }), {
+    const p = createSprint.mutateAsync({ name: newSprintName.trim() });
+    void toast.promise(p, {
       loading: 'Creating sprint…',
       success: 'Sprint created!',
       error: 'Failed to create sprint',
     });
+    await p.catch(() => null);
     setNewSprintName('');
     setCreating(false);
   };
 
-  const handleStartSprint = async (sprint: Sprint) => {
-    await toast.promise(
+  const handleStartSprint = (sprint: Sprint) => {
+    void toast.promise(
       updateSprint.mutateAsync({ sprintId: sprint.id, patch: { status: 'ACTIVE' } }),
       {
         loading: 'Starting sprint…',
@@ -88,8 +89,8 @@ export default function BacklogPage() {
     );
   };
 
-  const handleCompleteSprint = async (sprint: Sprint) => {
-    await toast.promise(
+  const handleCompleteSprint = (sprint: Sprint) => {
+    void toast.promise(
       updateSprint.mutateAsync({ sprintId: sprint.id, patch: { status: 'COMPLETED' } }),
       {
         loading: 'Completing sprint…',
@@ -99,8 +100,8 @@ export default function BacklogPage() {
     );
   };
 
-  const handleDeleteSprint = async (sprintId: string) => {
-    await toast.promise(deleteSprint.mutateAsync(sprintId), {
+  const handleDeleteSprint = (sprintId: string) => {
+    void toast.promise(deleteSprint.mutateAsync(sprintId), {
       loading: 'Deleting sprint…',
       success: 'Sprint deleted',
       error: 'Failed',

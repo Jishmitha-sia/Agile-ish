@@ -24,8 +24,7 @@ export const useComments = (workspaceSlug: string | undefined, issueId: string |
     enabled: status === 'authenticated' && Boolean(workspaceSlug) && Boolean(issueId),
     queryFn: async (): Promise<IssueComment[]> => {
       const api = getApiClient();
-      const res = await api.get(`/workspaces/${workspaceSlug}/issues/${issueId}/comments`);
-      return res as IssueComment[];
+      return await api.get<IssueComment[]>(`/workspaces/${workspaceSlug}/issues/${issueId}/comments`);
     },
   });
 };
@@ -35,7 +34,7 @@ export const useCreateComment = (workspaceSlug: string, issueId: string) => {
   return useMutation({
     mutationFn: async (input: CreateCommentRequest) => {
       const api = getApiClient();
-      return (await api.post(`/workspaces/${workspaceSlug}/issues/${issueId}/comments`, input)) as IssueComment;
+      return await api.post<IssueComment>(`/workspaces/${workspaceSlug}/issues/${issueId}/comments`, input);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: commentKeys.list(workspaceSlug, issueId) });
@@ -54,7 +53,7 @@ export const useUpdateComment = (workspaceSlug: string, issueId: string) => {
       patch: UpdateCommentRequest;
     }) => {
       const api = getApiClient();
-      return (await api.patch(`/workspaces/${workspaceSlug}/comments/${commentId}`, patch)) as IssueComment;
+      return await api.patch<IssueComment>(`/workspaces/${workspaceSlug}/comments/${commentId}`, patch);
     },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: commentKeys.list(workspaceSlug, issueId) });
